@@ -1,0 +1,11 @@
+.DS_Store
+**/.DS_Store
+
+build/
+DerivedData/
+
+*.xcuserstate
+xcuserdata/
+
+# Stale project generated before the HapTick rename.
+InterVib.xcodeproj/
