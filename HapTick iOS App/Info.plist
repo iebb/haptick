@@ -16,13 +16,11 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
-	<key>WKApplication</key>
-	<true/>
-	<key>WKBackgroundModes</key>
+	<key>UILaunchScreen</key>
+	<dict/>
+	<key>UISupportedInterfaceOrientations</key>
 	<array>
-		<string>self-care</string>
+		<string>UIInterfaceOrientationPortrait</string>
 	</array>
-	<key>WKCompanionAppBundleIdentifier</key>
-	<string>ad.neko.haptick</string>
 </dict>
 </plist>

@@ -7,13 +7,13 @@ import WatchKit
 final class TimerController: NSObject, ObservableObject {
     @Published var intervalSeconds: Double = 1.0 {
         didSet {
-            let normalized = Self.normalizedInterval(intervalSeconds)
+            let normalized = HapTickSettings.normalizedInterval(intervalSeconds)
             if intervalSeconds != normalized {
                 intervalSeconds = normalized
                 return
             }
 
-            UserDefaults.standard.set(intervalSeconds, forKey: Self.intervalKey)
+            persistAndBroadcastSettings()
 
             guard isRunning else { return }
             anchorDate = Date()
@@ -28,18 +28,18 @@ final class TimerController: NSObject, ObservableObject {
     @Published private(set) var pulseCount = 0
     @Published var hapticStyle: HapticStyle = .notification {
         didSet {
-            UserDefaults.standard.set(hapticStyle.rawValue, forKey: Self.hapticStyleKey)
+            persistAndBroadcastSettings()
         }
     }
     @Published var motionToggleEnabled = false {
         didSet {
-            UserDefaults.standard.set(motionToggleEnabled, forKey: Self.motionToggleKey)
+            persistAndBroadcastSettings()
             motionToggleEnabled ? startMotionDetection() : stopMotionDetection()
         }
     }
     @Published var displayMode: DisplayMode = .interval {
         didSet {
-            UserDefaults.standard.set(displayMode.rawValue, forKey: Self.displayModeKey)
+            persistAndBroadcastSettings()
         }
     }
 
@@ -47,6 +47,8 @@ final class TimerController: NSObject, ObservableObject {
     private var runtimeSession: WKExtendedRuntimeSession?
     private let motionManager = CMMotionManager()
     private let motionLogger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "ad.neko.haptick.watchapp", category: "Motion")
+    private let settingsSync = WatchSettingsSync()
+    private var isApplyingRemoteSettings = false
     private var lastSuccessfulFlipDate = Date.distantPast
     private var lastGravityZ: Double?
     private var lastStableFlipSign: Int?
@@ -54,41 +56,28 @@ final class TimerController: NSObject, ObservableObject {
     private var motionToggleArmed = true
     private var lastMotionSampleLogDate = Date.distantPast
 
-    static let minimumInterval = 0.8
-    static let maximumInterval = 60.0
-    private static let mediumIntervalThreshold = 15.0
-    private static let slowIntervalThreshold = 30.0
-    private static let mediumIntervalPosition = 142.0
-    private static let slowIntervalPosition = 217.0
-    private static let maximumIntervalPosition = 277.0
-    static let minimumBPM = 1.0
-    static let maximumBPM = 75.0
+    static let minimumInterval = HapTickSettings.minimumInterval
+    static let maximumInterval = HapTickSettings.maximumInterval
+    static let minimumBPM = HapTickSettings.minimumBPM
+    static let maximumBPM = HapTickSettings.maximumBPM
     private static let motionToggleCooldown: TimeInterval = 5.0
     private static let maximumFlipDuration: TimeInterval = 1.0
     private static let motionRearmAccelerationThreshold = 0.28
     private static let flipGravityThreshold = 0.6
-    private static let intervalKey = "timer.intervalSeconds"
-    private static let hapticStyleKey = "timer.hapticStyle"
-    private static let motionToggleKey = "timer.motionToggleEnabled"
-    private static let displayModeKey = "timer.displayMode"
 
     override init() {
-        let defaults = UserDefaults.standard
-        let savedInterval = defaults.object(forKey: Self.intervalKey) as? Double ?? 1.0
-        intervalSeconds = Self.normalizedInterval(savedInterval)
-
-        if let rawStyle = defaults.string(forKey: Self.hapticStyleKey),
-           let savedStyle = HapticStyle(rawValue: rawStyle) {
-            hapticStyle = savedStyle
-        }
-
-        if let rawMode = defaults.string(forKey: Self.displayModeKey),
-           let savedMode = DisplayMode(rawValue: rawMode) {
-            displayMode = savedMode
-        }
-
-        motionToggleEnabled = defaults.bool(forKey: Self.motionToggleKey)
+        let settings = HapTickSettings.load()
+        intervalSeconds = settings.intervalSeconds
+        hapticStyle = settings.hapticStyle
+        displayMode = settings.displayMode
+        motionToggleEnabled = settings.motionToggleEnabled
         super.init()
+
+        settingsSync.onSettingsReceived = { [weak self] settings in
+            self?.apply(settings)
+        }
+        settingsSync.activate()
+        persistAndBroadcastSettings()
 
         if motionToggleEnabled {
             startMotionDetection()
@@ -96,23 +85,15 @@ final class TimerController: NSObject, ObservableObject {
     }
 
     var intervalLabel: String {
-        String(format: "%.1fs", intervalSeconds)
+        currentSettings.intervalLabel
     }
 
     var primaryValueLabel: String {
-        switch displayMode {
-        case .interval:
-            intervalLabel
-        case .bpm:
-            bpmLabel
-        }
+        currentSettings.primaryValueLabel
     }
 
     var unitLabel: String {
-        switch displayMode {
-        case .interval: "interval"
-        case .bpm: "BPM"
-        }
+        currentSettings.unitLabel
     }
 
     var topLabel: String {
@@ -122,7 +103,7 @@ final class TimerController: NSObject, ObservableObject {
     var crownValue: Double {
         switch displayMode {
         case .interval:
-            Self.intervalPosition(for: intervalSeconds)
+            HapTickSettings.intervalPosition(for: intervalSeconds)
         case .bpm:
             bpmValue
         }
@@ -137,7 +118,7 @@ final class TimerController: NSObject, ObservableObject {
 
     var crownUpperBound: Double {
         switch displayMode {
-        case .interval: Self.maximumIntervalPosition
+        case .interval: HapTickSettings.maximumIntervalPosition
         case .bpm: Self.maximumBPM
         }
     }
@@ -152,11 +133,9 @@ final class TimerController: NSObject, ObservableObject {
     func updateCrownValue(_ value: Double) {
         switch displayMode {
         case .interval:
-            intervalSeconds = Self.interval(forPosition: value)
+            intervalSeconds = HapTickSettings.interval(forPosition: value)
         case .bpm:
-            let clampedBPM = min(max(value, Self.minimumBPM), Self.maximumBPM)
-            let bpm = clampedBPM < 10 ? (clampedBPM * 10).rounded() / 10 : clampedBPM.rounded()
-            intervalSeconds = 60 / bpm
+            intervalSeconds = HapTickSettings.interval(forBPM: value)
         }
     }
 
@@ -244,49 +223,39 @@ final class TimerController: NSObject, ObservableObject {
         session.start()
     }
 
-    private static func normalizedInterval(_ value: Double) -> Double {
-        min(max(value, minimumInterval), maximumInterval)
-    }
-
-    private static func intervalPosition(for value: Double) -> Double {
-        let interval = normalizedInterval(value)
-
-        if interval <= mediumIntervalThreshold {
-            return ((interval - minimumInterval) / 0.1).rounded()
-        }
-
-        if interval <= slowIntervalThreshold {
-            return mediumIntervalPosition + ((interval - mediumIntervalThreshold) / 0.2).rounded()
-        }
-
-        return slowIntervalPosition + ((interval - slowIntervalThreshold) / 0.5).rounded()
-    }
-
-    private static func interval(forPosition value: Double) -> Double {
-        let position = min(max(value.rounded(), 0), maximumIntervalPosition)
-        let interval: Double
-
-        if position <= mediumIntervalPosition {
-            interval = minimumInterval + position * 0.1
-        } else if position <= slowIntervalPosition {
-            interval = mediumIntervalThreshold + (position - mediumIntervalPosition) * 0.2
-        } else {
-            interval = slowIntervalThreshold + (position - slowIntervalPosition) * 0.5
-        }
-
-        return normalizedInterval((interval * 10).rounded() / 10)
-    }
-
     private var bpmValue: Double {
-        min(max(60 / intervalSeconds, Self.minimumBPM), Self.maximumBPM)
+        currentSettings.bpmValue
     }
 
     private var bpmLabel: String {
-        if bpmValue < 10 {
-            String(format: "%.1f", bpmValue)
-        } else {
-            "\(Int(bpmValue.rounded()))"
-        }
+        currentSettings.bpmLabel
+    }
+
+    private var currentSettings: HapTickSettings {
+        HapTickSettings(
+            intervalSeconds: intervalSeconds,
+            hapticStyle: hapticStyle,
+            motionToggleEnabled: motionToggleEnabled,
+            displayMode: displayMode
+        )
+    }
+
+    private func persistAndBroadcastSettings() {
+        guard !isApplyingRemoteSettings else { return }
+
+        let settings = currentSettings
+        settings.save()
+        settingsSync.send(settings)
+    }
+
+    private func apply(_ settings: HapTickSettings) {
+        isApplyingRemoteSettings = true
+        intervalSeconds = settings.intervalSeconds
+        hapticStyle = settings.hapticStyle
+        displayMode = settings.displayMode
+        motionToggleEnabled = settings.motionToggleEnabled
+        isApplyingRemoteSettings = false
+        settings.save()
     }
 
     private func startMotionDetection() {
@@ -414,52 +383,7 @@ final class TimerController: NSObject, ObservableObject {
 
 }
 
-enum DisplayMode: String {
-    case interval
-    case bpm
-}
-
-enum HapticStyle: String, CaseIterable, Identifiable {
-    case notification
-    case directionUp
-    case directionDown
-    case success
-    case failure
-    case retry
-    case start
-    case stop
-    case click
-
-    var id: String { rawValue }
-
-    var label: String {
-        switch self {
-        case .notification: "Notification"
-        case .directionUp: "Direction Up"
-        case .directionDown: "Direction Down"
-        case .success: "Success"
-        case .failure: "Failure"
-        case .retry: "Retry"
-        case .start: "Start"
-        case .stop: "Stop"
-        case .click: "Click"
-        }
-    }
-
-    var symbolName: String {
-        switch self {
-        case .notification: "bell"
-        case .directionUp: "arrow.up"
-        case .directionDown: "arrow.down"
-        case .success: "checkmark"
-        case .failure: "xmark"
-        case .retry: "arrow.clockwise"
-        case .start: "play.fill"
-        case .stop: "stop.fill"
-        case .click: "smallcircle.filled.circle"
-        }
-    }
-
+extension HapticStyle {
     var type: WKHapticType {
         switch self {
         case .notification: .notification

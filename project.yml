@@ -3,6 +3,7 @@ options:
   bundleIdPrefix: ad.neko
   createIntermediateGroups: true
   deploymentTarget:
+    iOS: "17.0"
     watchOS: "10.0"
 settings:
   base:
@@ -10,12 +11,34 @@ settings:
     MARKETING_VERSION: "1.0"
     CURRENT_PROJECT_VERSION: "1"
 targets:
+  HapTick:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: HapTick iOS App
+      - path: Shared
+    dependencies:
+      - target: HapTick Watch App
+        embed: true
+      - sdk: WatchConnectivity.framework
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: ad.neko.haptick
+        INFOPLIST_FILE: HapTick iOS App/Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: 9733K94JUG
+        TARGETED_DEVICE_FAMILY: "1"
   HapTick Watch App:
     type: application
     platform: watchOS
     deploymentTarget: "10.0"
     sources:
       - path: HapTick Watch App
+      - path: Shared
+    dependencies:
+      - sdk: WatchConnectivity.framework
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: ad.neko.haptick.watchapp
@@ -23,9 +46,23 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: 9733K94JUG
-        SKIP_INSTALL: NO
+        INFOPLIST_KEY_WKCompanionAppBundleIdentifier: ad.neko.haptick
+        SKIP_INSTALL: YES
         SUPPORTED_PLATFORMS: "watchos watchsimulator"
 schemes:
+  HapTick:
+    build:
+      targets:
+        HapTick: all
+        HapTick Watch App: all
+    run:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
   HapTick Watch App:
     build:
       targets:
