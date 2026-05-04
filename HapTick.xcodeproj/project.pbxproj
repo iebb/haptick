@@ -58,6 +58,7 @@
 		7D696192DD2C2BBDCE9D3220 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7F78318FAC662E893D43DC1F /* HapTick.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = HapTick.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		917FD95D4DE083FAED78755C /* HapTickPhoneApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapTickPhoneApp.swift; sourceTree = "<group>"; };
+		919F97E91FDD34F6167DBFE9 /* AppFlows.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = AppFlows.md; sourceTree = "<group>"; };
 		B6A6EE0BACEBABCB4FD7B164 /* PhoneSettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneSettingsStore.swift; sourceTree = "<group>"; };
 		DB708039C275921005BCCCB1 /* TimerScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerScreen.swift; sourceTree = "<group>"; };
 		E371F466FABDF1EF8C034C75 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -118,6 +119,14 @@
 			path = Shared;
 			sourceTree = "<group>";
 		};
+		838E6E0D5A4C6A9542A2F99D /* Docs */ = {
+			isa = PBXGroup;
+			children = (
+				919F97E91FDD34F6167DBFE9 /* AppFlows.md */,
+			);
+			path = Docs;
+			sourceTree = "<group>";
+		};
 		88224CAA1CCCFE29421678A0 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -138,6 +147,7 @@
 		C201834BCEC4CF2EB91C7D91 = {
 			isa = PBXGroup;
 			children = (
+				838E6E0D5A4C6A9542A2F99D /* Docs */,
 				0DD4CBFFB25A61C1C50BE92B /* HapTick iOS App */,
 				157635DFDEBB7441F805B901 /* HapTick Watch App */,
 				3DEE1B69C521EA3BFABB1C8C /* Shared */,
