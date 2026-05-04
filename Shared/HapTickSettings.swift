@@ -63,14 +63,14 @@ struct HapTickSettings: Equatable, Codable {
     var displayMode: DisplayMode
 
     static let minimumInterval = 0.8
-    static let maximumInterval = 60.0
-    static let minimumBPM = 1.0
+    static let maximumInterval = 999.0
+    static let minimumBPM = 0.1
     static let maximumBPM = 75.0
     static let mediumIntervalThreshold = 15.0
     static let slowIntervalThreshold = 30.0
     static let mediumIntervalPosition = 142.0
     static let slowIntervalPosition = 217.0
-    static let maximumIntervalPosition = 277.0
+    static let maximumIntervalPosition = slowIntervalPosition + ((maximumInterval - slowIntervalThreshold) / 0.5).rounded()
 
     static let intervalKey = "timer.intervalSeconds"
     static let hapticStyleKey = "timer.hapticStyle"
@@ -112,11 +112,11 @@ struct HapTickSettings: Equatable, Codable {
     }
 
     var intervalLabel: String {
-        String(format: "%.1fs", intervalSeconds)
+        "\(Self.formattedNumber(intervalSeconds, maximumFractionDigits: 1))s"
     }
 
     var bpmValue: Double {
-        min(max(60 / intervalSeconds, Self.minimumBPM), Self.maximumBPM)
+        60 / intervalSeconds
     }
 
     var bpmLabel: String {
@@ -162,7 +162,8 @@ struct HapTickSettings: Equatable, Codable {
     }
 
     static func normalizedInterval(_ value: Double) -> Double {
-        min(max(value, minimumInterval), maximumInterval)
+        guard value.isFinite else { return minimumInterval }
+        return min(max(value, minimumInterval), maximumInterval)
     }
 
     static func intervalPosition(for value: Double) -> Double {
@@ -195,8 +196,18 @@ struct HapTickSettings: Equatable, Codable {
     }
 
     static func interval(forBPM value: Double) -> Double {
-        let clampedBPM = min(max(value, minimumBPM), maximumBPM)
-        let bpm = clampedBPM < 10 ? (clampedBPM * 10).rounded() / 10 : clampedBPM.rounded()
+        guard value.isFinite, value > 0 else { return maximumInterval }
+
+        let bpm = value < 10 ? (value * 10).rounded() / 10 : value.rounded()
         return 60 / bpm
+    }
+
+    static func formattedNumber(_ value: Double, maximumFractionDigits: Int) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.minimumFractionDigits = 0
+        formatter.maximumFractionDigits = maximumFractionDigits
+        formatter.usesGroupingSeparator = false
+        return formatter.string(from: NSNumber(value: value)) ?? "\(value)"
     }
 }

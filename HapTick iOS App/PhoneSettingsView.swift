@@ -2,6 +2,9 @@ import SwiftUI
 
 struct PhoneSettingsView: View {
     @StateObject private var store = PhoneSettingsStore()
+    @State private var intervalText = ""
+    @State private var bpmText = ""
+    @FocusState private var focusedField: EditedField?
 
     private let styleColumns = [
         GridItem(.flexible(), spacing: 10),
@@ -9,53 +12,38 @@ struct PhoneSettingsView: View {
         GridItem(.flexible(), spacing: 10)
     ]
 
+    private enum EditedField {
+        case interval
+        case bpm
+    }
+
     var body: some View {
         NavigationStack {
             Form {
                 Section {
-                    Picker("Display", selection: displayModeBinding) {
+                    Picker("Unit", selection: displayModeBinding) {
                         ForEach(DisplayMode.allCases) { mode in
                             Text(mode.label).tag(mode)
                         }
                     }
                     .pickerStyle(.segmented)
 
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Label("Interval", systemImage: "timer")
-                            Spacer()
-                            Text(store.settings.intervalLabel)
-                                .monospacedDigit()
-                                .foregroundStyle(.secondary)
-                        }
-
-                        Stepper(
-                            value: intervalPositionBinding,
-                            in: 0...HapTickSettings.maximumIntervalPosition,
-                            step: 1
-                        ) {
-                            EmptyView()
-                        }
-                        .labelsHidden()
-                    }
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Label("BPM", systemImage: "metronome")
-                            Spacer()
-                            Text(store.settings.bpmLabel)
-                                .monospacedDigit()
-                                .foregroundStyle(.secondary)
-                        }
-
-                        Stepper(
-                            value: bpmBinding,
-                            in: HapTickSettings.minimumBPM...HapTickSettings.maximumBPM,
-                            step: store.settings.bpmValue < 10 ? 0.1 : 1
-                        ) {
-                            EmptyView()
-                        }
-                        .labelsHidden()
+                    if store.settings.displayMode == .interval {
+                        numericInputRow(
+                            title: "Interval",
+                            systemImage: "timer",
+                            unit: "s",
+                            text: $intervalText,
+                            field: .interval
+                        )
+                    } else {
+                        numericInputRow(
+                            title: "BPM",
+                            systemImage: "metronome",
+                            unit: "BPM",
+                            text: $bpmText,
+                            field: .bpm
+                        )
                     }
                 }
 
@@ -87,7 +75,7 @@ struct PhoneSettingsView: View {
                 }
 
                 Section {
-                    Toggle("Flip starts and stops", isOn: motionToggleBinding)
+                    Toggle("Flip to start/stop", isOn: motionToggleBinding)
                 }
 
                 Section {
@@ -103,6 +91,51 @@ struct PhoneSettingsView: View {
                 }
             }
             .navigationTitle("HapTick")
+            .onAppear(perform: syncInputText)
+            .onChange(of: store.settings) { _, _ in
+                guard focusedField == nil else { return }
+                syncInputText()
+            }
+            .onChange(of: focusedField) { oldValue, newValue in
+                if oldValue != nil, newValue == nil {
+                    commitFocusedInput(oldValue)
+                    syncInputText()
+                } else if newValue == nil {
+                    syncInputText()
+                }
+            }
+            .onChange(of: intervalText) { _, newValue in
+                guard focusedField == .interval else { return }
+                applyIntervalText(newValue)
+            }
+            .onChange(of: bpmText) { _, newValue in
+                guard focusedField == .bpm else { return }
+                applyBPMText(newValue)
+            }
+        }
+    }
+
+    private func numericInputRow(
+        title: String,
+        systemImage: String,
+        unit: String,
+        text: Binding<String>,
+        field: EditedField
+    ) -> some View {
+        HStack(spacing: 12) {
+            Label(title, systemImage: systemImage)
+
+            Spacer()
+
+            TextField(title, text: text)
+                .focused($focusedField, equals: field)
+                .keyboardType(.decimalPad)
+                .multilineTextAlignment(.trailing)
+                .monospacedDigit()
+                .frame(minWidth: 88)
+
+            Text(unit)
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -117,20 +150,6 @@ struct PhoneSettingsView: View {
         )
     }
 
-    private var intervalPositionBinding: Binding<Double> {
-        Binding(
-            get: { HapTickSettings.intervalPosition(for: store.settings.intervalSeconds) },
-            set: { store.setIntervalPosition($0) }
-        )
-    }
-
-    private var bpmBinding: Binding<Double> {
-        Binding(
-            get: { store.settings.bpmValue },
-            set: { store.setBPM($0) }
-        )
-    }
-
     private var motionToggleBinding: Binding<Bool> {
         Binding(
             get: { store.settings.motionToggleEnabled },
@@ -140,6 +159,38 @@ struct PhoneSettingsView: View {
                 }
             }
         )
+    }
+
+    private func applyIntervalText(_ text: String) {
+        guard let interval = numericValue(from: text), interval >= HapTickSettings.minimumInterval else { return }
+        store.setInterval(interval)
+    }
+
+    private func applyBPMText(_ text: String) {
+        guard let bpm = numericValue(from: text), bpm > 0 else { return }
+        store.setBPM(bpm)
+    }
+
+    private func commitFocusedInput(_ field: EditedField?) {
+        switch field {
+        case .interval:
+            applyIntervalText(intervalText)
+        case .bpm:
+            applyBPMText(bpmText)
+        case nil:
+            break
+        }
+    }
+
+    private func syncInputText() {
+        intervalText = HapTickSettings.formattedNumber(store.settings.intervalSeconds, maximumFractionDigits: 3)
+
+        let maximumFractionDigits = store.settings.bpmValue < 10 ? 1 : 0
+        bpmText = HapTickSettings.formattedNumber(store.settings.bpmValue, maximumFractionDigits: maximumFractionDigits)
+    }
+
+    private func numericValue(from text: String) -> Double? {
+        Double(text.trimmingCharacters(in: .whitespacesAndNewlines))
     }
 }
 

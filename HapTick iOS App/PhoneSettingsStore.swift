@@ -22,6 +22,12 @@ final class PhoneSettingsStore: NSObject, ObservableObject, WCSessionDelegate {
         apply(nextSettings, shouldSend: true)
     }
 
+    func setInterval(_ interval: Double) {
+        update { settings in
+            settings.intervalSeconds = interval
+        }
+    }
+
     func setIntervalPosition(_ position: Double) {
         update { settings in
             settings.intervalSeconds = HapTickSettings.interval(forPosition: position)
