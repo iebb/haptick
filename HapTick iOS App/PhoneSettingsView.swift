@@ -19,78 +19,21 @@ struct PhoneSettingsView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section {
-                    Picker("Unit", selection: displayModeBinding) {
-                        ForEach(DisplayMode.allCases) { mode in
-                            Text(mode.label).tag(mode)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-
-                    if store.settings.displayMode == .interval {
-                        numericInputRow(
-                            title: "Interval",
-                            systemImage: "timer",
-                            unit: "s",
-                            text: $intervalText,
-                            field: .interval
-                        )
-                    } else {
-                        numericInputRow(
-                            title: "BPM",
-                            systemImage: "metronome",
-                            unit: "BPM",
-                            text: $bpmText,
-                            field: .bpm
-                        )
-                    }
+            ScrollView {
+                VStack(spacing: 18) {
+                    valuePanel
+                    stylePanel
+                    behaviorPanel
+                    syncPanel
                 }
-
-                Section("Style") {
-                    LazyVGrid(columns: styleColumns, spacing: 10) {
-                        ForEach(HapticStyle.allCases) { style in
-                            Button {
-                                store.update { settings in
-                                    settings.hapticStyle = style
-                                }
-                            } label: {
-                                VStack(spacing: 8) {
-                                    Image(systemName: style.symbolName)
-                                        .font(.system(size: 20, weight: .medium))
-
-                                    Text(style.label)
-                                        .font(.caption2)
-                                        .multilineTextAlignment(.center)
-                                        .lineLimit(2)
-                                        .minimumScaleFactor(0.72)
-                                }
-                                .frame(maxWidth: .infinity, minHeight: 72)
-                            }
-                            .buttonStyle(.bordered)
-                            .tint(store.settings.hapticStyle == style ? .cyan : .gray)
-                        }
-                    }
-                    .padding(.vertical, 4)
-                }
-
-                Section {
-                    Toggle("Flip to start/stop", isOn: motionToggleBinding)
-                }
-
-                Section {
-                    Button {
-                        store.sendCurrentSettings()
-                    } label: {
-                        Label("Send to Apple Watch", systemImage: "applewatch.radiowaves.left.and.right")
-                    }
-
-                    Text(store.syncStatus)
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
+                .padding(.horizontal, 18)
+                .padding(.top, 16)
+                .padding(.bottom, 28)
             }
+            .scrollDismissesKeyboard(.interactively)
+            .background(Color(.systemGroupedBackground).ignoresSafeArea())
             .navigationTitle("HapTick")
+            .toolbarTitleDisplayMode(.large)
             .onAppear(perform: syncInputText)
             .onChange(of: store.settings) { _, _ in
                 guard focusedField == nil else { return }
@@ -115,28 +58,160 @@ struct PhoneSettingsView: View {
         }
     }
 
-    private func numericInputRow(
-        title: String,
-        systemImage: String,
-        unit: String,
-        text: Binding<String>,
-        field: EditedField
-    ) -> some View {
+    private var valuePanel: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            unitPicker
+
+            let isInterval = store.settings.displayMode == .interval
+            let field: EditedField = isInterval ? .interval : .bpm
+            let text = isInterval ? $intervalText : $bpmText
+
+            VStack(alignment: .leading, spacing: 6) {
+                Label(isInterval ? "Interval" : "BPM", systemImage: isInterval ? "timer" : "metronome")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.secondary)
+
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    TextField(isInterval ? "0.8" : "75", text: text)
+                        .focused($focusedField, equals: field)
+                        .keyboardType(.decimalPad)
+                        .font(.system(size: 56, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.primary)
+                        .monospacedDigit()
+                        .minimumScaleFactor(0.55)
+                        .lineLimit(1)
+                        .textFieldStyle(.plain)
+
+                    Text(isInterval ? "s" : "BPM")
+                        .font(.title3.weight(.medium))
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .padding(18)
+        .liquidPanel()
+    }
+
+    private var unitPicker: some View {
+        HStack(spacing: 4) {
+            ForEach(DisplayMode.allCases) { mode in
+                Button {
+                    displayModeBinding.wrappedValue = mode
+                    focusedField = nil
+                } label: {
+                    Text(mode.label)
+                        .font(.subheadline.weight(.semibold))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(store.settings.displayMode == mode ? Color.primary : Color.secondary)
+                .background {
+                    if store.settings.displayMode == mode {
+                        Capsule(style: .continuous)
+                            .fill(.background.opacity(0.72))
+                            .shadow(color: .black.opacity(0.08), radius: 10, y: 4)
+                    }
+                }
+            }
+        }
+        .padding(4)
+        .background(.thinMaterial, in: Capsule(style: .continuous))
+    }
+
+    private var stylePanel: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            panelHeader(title: "Style", systemImage: "waveform.path.ecg")
+
+            LazyVGrid(columns: styleColumns, spacing: 10) {
+                ForEach(HapticStyle.allCases) { style in
+                    styleButton(style)
+                }
+            }
+        }
+        .padding(18)
+        .liquidPanel()
+    }
+
+    private func styleButton(_ style: HapticStyle) -> some View {
+        let isSelected = store.settings.hapticStyle == style
+
+        return Button {
+            store.update { settings in
+                settings.hapticStyle = style
+            }
+        } label: {
+            VStack(spacing: 7) {
+                Image(systemName: style.symbolName)
+                    .font(.system(size: 20, weight: .medium))
+                    .symbolRenderingMode(.hierarchical)
+
+                Text(style.label)
+                    .font(.caption2.weight(.medium))
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.72)
+            }
+            .frame(maxWidth: .infinity, minHeight: 74)
+            .foregroundStyle(isSelected ? Color.accentColor : Color.primary)
+            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(isSelected ? Color.accentColor.opacity(0.65) : Color.primary.opacity(0.08), lineWidth: isSelected ? 1.5 : 1)
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var behaviorPanel: some View {
         HStack(spacing: 12) {
-            Label(title, systemImage: systemImage)
+            panelHeader(title: "Flip to start/stop", systemImage: "arrow.trianglehead.2.clockwise.rotate.90")
 
             Spacer()
 
-            TextField(title, text: text)
-                .focused($focusedField, equals: field)
-                .keyboardType(.decimalPad)
-                .multilineTextAlignment(.trailing)
-                .monospacedDigit()
-                .frame(minWidth: 88)
-
-            Text(unit)
-                .foregroundStyle(.secondary)
+            Toggle("Flip to start/stop", isOn: motionToggleBinding)
+                .labelsHidden()
+                .tint(.accentColor)
         }
+        .padding(18)
+        .liquidPanel()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Flip to start or stop")
+    }
+
+    private var syncPanel: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 12) {
+                panelHeader(title: "Watch", systemImage: "applewatch.radiowaves.left.and.right")
+
+                Spacer()
+
+                Button {
+                    store.sendCurrentSettings()
+                } label: {
+                    Image(systemName: "arrow.triangle.2.circlepath")
+                        .font(.system(size: 17, weight: .semibold))
+                        .frame(width: 42, height: 42)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.primary)
+                .background(.thinMaterial, in: Circle())
+                .accessibilityLabel("Send settings to Apple Watch")
+            }
+
+            Text(store.syncStatus)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+        }
+        .padding(18)
+        .liquidPanel()
+    }
+
+    private func panelHeader(title: String, systemImage: String) -> some View {
+        Label(title, systemImage: systemImage)
+            .font(.headline.weight(.semibold))
     }
 
     private var displayModeBinding: Binding<DisplayMode> {
@@ -196,4 +271,22 @@ struct PhoneSettingsView: View {
 
 #Preview {
     PhoneSettingsView()
+}
+
+private struct LiquidPanelModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 26, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 26, style: .continuous)
+                    .stroke(.white.opacity(0.24), lineWidth: 1)
+            }
+            .shadow(color: .black.opacity(0.08), radius: 18, y: 8)
+    }
+}
+
+private extension View {
+    func liquidPanel() -> some View {
+        modifier(LiquidPanelModifier())
+    }
 }
