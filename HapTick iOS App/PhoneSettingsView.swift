@@ -32,8 +32,6 @@ struct PhoneSettingsView: View {
             }
             .scrollDismissesKeyboard(.interactively)
             .background(Color(.systemGroupedBackground).ignoresSafeArea())
-            .navigationTitle("HapTick")
-            .toolbarTitleDisplayMode(.large)
             .onAppear(perform: syncInputText)
             .onChange(of: store.settings) { _, _ in
                 guard focusedField == nil else { return }
@@ -42,6 +40,9 @@ struct PhoneSettingsView: View {
             .onChange(of: focusedField) { oldValue, newValue in
                 if oldValue != nil, newValue == nil {
                     commitFocusedInput(oldValue)
+                    if oldValue == .bpm, bpmLimitWarning != nil {
+                        return
+                    }
                     syncInputText()
                 } else if newValue == nil {
                     syncInputText()
@@ -65,6 +66,7 @@ struct PhoneSettingsView: View {
             let isInterval = store.settings.displayMode == .interval
             let field: EditedField = isInterval ? .interval : .bpm
             let text = isInterval ? $intervalText : $bpmText
+            let bpmWarning = bpmLimitWarning
 
             VStack(alignment: .leading, spacing: 6) {
                 Label(isInterval ? "Interval" : "BPM", systemImage: isInterval ? "timer" : "metronome")
@@ -76,7 +78,7 @@ struct PhoneSettingsView: View {
                         .focused($focusedField, equals: field)
                         .keyboardType(.decimalPad)
                         .font(.system(size: 56, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(bpmWarning == nil ? Color.primary : Color.red)
                         .monospacedDigit()
                         .minimumScaleFactor(0.55)
                         .lineLimit(1)
@@ -84,7 +86,14 @@ struct PhoneSettingsView: View {
 
                     Text(isInterval ? "s" : "BPM")
                         .font(.title3.weight(.medium))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(bpmWarning == nil ? Color.secondary : Color.red)
+                }
+
+                if let bpmWarning {
+                    Text(bpmWarning)
+                        .font(.footnote.weight(.medium))
+                        .foregroundStyle(.red)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
         }
@@ -210,8 +219,17 @@ struct PhoneSettingsView: View {
     }
 
     private func panelHeader(title: String, systemImage: String) -> some View {
-        Label(title, systemImage: systemImage)
-            .font(.headline.weight(.semibold))
+        HStack(alignment: .center, spacing: 10) {
+            Image(systemName: systemImage)
+                .font(.system(size: 20, weight: .semibold))
+                .symbolRenderingMode(.hierarchical)
+                .frame(width: 24, height: 24)
+
+            Text(title)
+                .font(.headline.weight(.semibold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.72)
+        }
     }
 
     private var displayModeBinding: Binding<DisplayMode> {
@@ -236,13 +254,33 @@ struct PhoneSettingsView: View {
         )
     }
 
+    private var bpmLimitWarning: String? {
+        guard store.settings.displayMode == .bpm,
+              let bpm = numericValue(from: bpmText),
+              bpm > HapTickSettings.maximumBPM
+        else {
+            return nil
+        }
+
+        let suggestion = supportedBPMSuggestion(for: bpm)
+        let suggestionDigits = suggestion < 10 ? 1 : 0
+        let suggestionText = HapTickSettings.formattedNumber(suggestion, maximumFractionDigits: suggestionDigits)
+        return "The maximum supported is 75 BPM. You can use \(suggestionText) BPM instead."
+    }
+
     private func applyIntervalText(_ text: String) {
         guard let interval = numericValue(from: text), interval >= HapTickSettings.minimumInterval else { return }
         store.setInterval(interval)
     }
 
     private func applyBPMText(_ text: String) {
-        guard let bpm = numericValue(from: text), bpm > 0 else { return }
+        guard let bpm = numericValue(from: text),
+              bpm > 0,
+              bpm <= HapTickSettings.maximumBPM
+        else {
+            return
+        }
+
         store.setBPM(bpm)
     }
 
@@ -266,6 +304,13 @@ struct PhoneSettingsView: View {
 
     private func numericValue(from text: String) -> Double? {
         Double(text.trimmingCharacters(in: .whitespacesAndNewlines))
+    }
+
+    private func supportedBPMSuggestion(for bpm: Double) -> Double {
+        guard bpm > HapTickSettings.maximumBPM else { return bpm }
+
+        let power = ceil(log2(bpm / HapTickSettings.maximumBPM))
+        return bpm / pow(2, power)
     }
 }
 
