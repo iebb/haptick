@@ -4,6 +4,7 @@ import WatchConnectivity
 @MainActor
 final class WatchSettingsSync: NSObject, WCSessionDelegate {
     var onSettingsReceived: ((HapTickSettings) -> Void)?
+    var onPlaybackCommandReceived: ((HapTickPlaybackCommand) -> Void)?
 
     private var session: WCSession?
 
@@ -41,6 +42,11 @@ final class WatchSettingsSync: NSObject, WCSessionDelegate {
     nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
         Task { @MainActor in
             onSettingsReceived?(HapTickSettings(dictionary: message))
+
+            if let rawCommand = message[HapTickMessage.playbackCommandKey] as? String,
+               let command = HapTickPlaybackCommand(rawValue: rawCommand) {
+                onPlaybackCommandReceived?(command)
+            }
         }
     }
 }

@@ -70,6 +70,16 @@ enum HapticStyle: String, CaseIterable, Identifiable, Codable {
     }
 }
 
+enum HapTickPlaybackCommand: String {
+    case start
+    case stop
+    case toggle
+}
+
+enum HapTickMessage {
+    static let playbackCommandKey = "haptick.playbackCommand"
+}
+
 struct HapTickSettings: Equatable, Codable {
     var intervalSeconds: Double
     var hapticStyle: HapticStyle

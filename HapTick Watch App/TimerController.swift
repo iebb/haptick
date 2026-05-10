@@ -80,6 +80,9 @@ final class TimerController: NSObject, ObservableObject {
         settingsSync.onSettingsReceived = { [weak self] settings in
             self?.apply(settings)
         }
+        settingsSync.onPlaybackCommandReceived = { [weak self] command in
+            self?.apply(command)
+        }
         settingsSync.activate()
         persistAndBroadcastSettings()
 
@@ -168,6 +171,17 @@ final class TimerController: NSObject, ObservableObject {
 
     func toggleRunning() {
         isRunning ? stop() : start()
+    }
+
+    func apply(_ command: HapTickPlaybackCommand) {
+        switch command {
+        case .start:
+            start()
+        case .stop:
+            stop()
+        case .toggle:
+            toggleRunning()
+        }
     }
 
     func start() {

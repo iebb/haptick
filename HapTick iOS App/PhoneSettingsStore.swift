@@ -44,6 +44,14 @@ final class PhoneSettingsStore: NSObject, ObservableObject, WCSessionDelegate {
         send(settings)
     }
 
+    func startWatchTimer() {
+        sendPlaybackCommand(.start)
+    }
+
+    func stopWatchTimer() {
+        sendPlaybackCommand(.stop)
+    }
+
     private func activateSession() {
         guard WCSession.isSupported() else {
             syncStatus = "Watch sync unavailable on this device"
@@ -87,6 +95,28 @@ final class PhoneSettingsStore: NSObject, ObservableObject, WCSessionDelegate {
         }
     }
 
+    private func sendPlaybackCommand(_ command: HapTickPlaybackCommand) {
+        guard let session else {
+            syncStatus = "Watch sync unavailable on this device"
+            return
+        }
+
+        guard session.isReachable else {
+            syncStatus = "Open HapTick on Apple Watch to control playback"
+            return
+        }
+
+        var message = settings.dictionary
+        message[HapTickMessage.playbackCommandKey] = command.rawValue
+
+        session.sendMessage(message, replyHandler: nil) { [weak self] _ in
+            Task { @MainActor in
+                self?.syncStatus = "Could not reach Apple Watch"
+            }
+        }
+        syncStatus = command == .start ? "Start sent to Apple Watch" : "Stop sent to Apple Watch"
+    }
+
     nonisolated func session(
         _ session: WCSession,
         activationDidCompleteWith activationState: WCSessionActivationState,
@@ -115,6 +145,8 @@ final class PhoneSettingsStore: NSObject, ObservableObject, WCSessionDelegate {
     }
 
     nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
+        guard message[HapTickMessage.playbackCommandKey] == nil else { return }
+
         Task { @MainActor in
             apply(HapTickSettings(dictionary: message), shouldSend: false)
         }

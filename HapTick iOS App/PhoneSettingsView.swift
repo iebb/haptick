@@ -21,10 +21,10 @@ struct PhoneSettingsView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 18) {
+                    syncPanel
                     valuePanel
                     stylePanel
                     behaviorPanel
-                    syncPanel
                 }
                 .padding(.horizontal, 18)
                 .padding(.top, 16)
@@ -231,6 +231,28 @@ struct PhoneSettingsView: View {
                 .foregroundStyle(.primary)
                 .background(.thinMaterial, in: Circle())
                 .accessibilityLabel("Send settings to Apple Watch")
+            }
+
+            HStack(spacing: 10) {
+                Button {
+                    focusedField = nil
+                    store.startWatchTimer()
+                } label: {
+                    Label("Start", systemImage: "play.fill")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+
+                Button {
+                    focusedField = nil
+                    store.stopWatchTimer()
+                } label: {
+                    Label("Stop", systemImage: "stop.fill")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.large)
             }
 
             Text(store.syncStatus)
