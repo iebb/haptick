@@ -40,6 +40,9 @@ struct PhoneSettingsView: View {
             .onChange(of: focusedField) { oldValue, newValue in
                 if oldValue != nil, newValue == nil {
                     commitFocusedInput(oldValue)
+                    if oldValue == .interval, intervalLimitWarning != nil {
+                        return
+                    }
                     if oldValue == .bpm, bpmLimitWarning != nil {
                         return
                     }
@@ -66,19 +69,22 @@ struct PhoneSettingsView: View {
             let isInterval = store.settings.displayMode == .interval
             let field: EditedField = isInterval ? .interval : .bpm
             let text = isInterval ? $intervalText : $bpmText
+            let intervalWarning = intervalLimitWarning
             let bpmWarning = bpmLimitWarning
+            let styleWarning = styleSpeedWarning
+            let hasWarning = intervalWarning != nil || bpmWarning != nil || styleWarning != nil
 
             VStack(alignment: .leading, spacing: 6) {
                 Label(isInterval ? "Interval" : "BPM", systemImage: isInterval ? "timer" : "metronome")
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(hasWarning ? Color.red : Color.secondary)
 
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    TextField(isInterval ? "0.8" : "75", text: text)
+                    TextField(isInterval ? "0.2" : "75", text: text)
                         .focused($focusedField, equals: field)
                         .keyboardType(.decimalPad)
                         .font(.system(size: 56, weight: .semibold, design: .rounded))
-                        .foregroundStyle(bpmWarning == nil ? Color.primary : Color.red)
+                        .foregroundStyle(hasWarning ? Color.red : Color.primary)
                         .monospacedDigit()
                         .minimumScaleFactor(0.55)
                         .lineLimit(1)
@@ -86,11 +92,25 @@ struct PhoneSettingsView: View {
 
                     Text(isInterval ? "s" : "BPM")
                         .font(.title3.weight(.medium))
-                        .foregroundStyle(bpmWarning == nil ? Color.secondary : Color.red)
+                        .foregroundStyle(hasWarning ? Color.red : Color.secondary)
+                }
+
+                if let intervalWarning {
+                    Text(intervalWarning)
+                        .font(.footnote.weight(.medium))
+                        .foregroundStyle(.red)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 if let bpmWarning {
                     Text(bpmWarning)
+                        .font(.footnote.weight(.medium))
+                        .foregroundStyle(.red)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                if let styleWarning {
+                    Text(styleWarning)
                         .font(.footnote.weight(.medium))
                         .foregroundStyle(.red)
                         .fixedSize(horizontal: false, vertical: true)
@@ -145,6 +165,8 @@ struct PhoneSettingsView: View {
 
     private func styleButton(_ style: HapticStyle) -> some View {
         let isSelected = store.settings.hapticStyle == style
+        let isUnsupported = displayedSettings.isStyleUnsupported(style)
+        let styleColor = isUnsupported ? Color.red : (isSelected ? Color.accentColor : Color.primary)
 
         return Button {
             store.update { settings in
@@ -163,11 +185,13 @@ struct PhoneSettingsView: View {
                     .minimumScaleFactor(0.72)
             }
             .frame(maxWidth: .infinity, minHeight: 74)
-            .foregroundStyle(isSelected ? Color.accentColor : Color.primary)
+            .foregroundStyle(styleColor)
             .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(isSelected ? Color.accentColor.opacity(0.65) : Color.primary.opacity(0.08), lineWidth: isSelected ? 1.5 : 1)
+                if isSelected {
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(styleColor.opacity(0.65), lineWidth: 1.5)
+                }
             }
         }
         .buttonStyle(.plain)
@@ -262,14 +286,50 @@ struct PhoneSettingsView: View {
             return nil
         }
 
-        let suggestion = supportedBPMSuggestion(for: bpm)
-        let suggestionDigits = suggestion < 10 ? 1 : 0
-        let suggestionText = HapTickSettings.formattedNumber(suggestion, maximumFractionDigits: suggestionDigits)
-        return "The maximum supported is 75 BPM. You can use \(suggestionText) BPM instead."
+        let maximumText = HapTickSettings.formattedNumber(HapTickSettings.maximumBPM, maximumFractionDigits: 0)
+        return "The maximum supported is \(maximumText) BPM."
+    }
+
+    private var intervalLimitWarning: String? {
+        guard store.settings.displayMode == .interval,
+              let interval = numericValue(from: intervalText),
+              interval >= 0,
+              interval + 0.0001 < HapTickSettings.minimumInterval
+        else {
+            return nil
+        }
+
+        let minimumText = HapTickSettings.formattedNumber(HapTickSettings.minimumInterval, maximumFractionDigits: 2)
+        return "The minimum supported interval is \(minimumText)s."
+    }
+
+    private var styleSpeedWarning: String? {
+        displayedSettings.styleSpeedWarning
+    }
+
+    private var displayedSettings: HapTickSettings {
+        var settings = store.settings
+        settings.intervalSeconds = displayedIntervalSeconds
+        return settings
+    }
+
+    private var displayedIntervalSeconds: Double {
+        switch store.settings.displayMode {
+        case .interval:
+            if let interval = numericValue(from: intervalText), interval >= 0 {
+                return HapTickSettings.normalizedInterval(interval)
+            }
+        case .bpm:
+            if let bpm = numericValue(from: bpmText), bpm > 0 {
+                return HapTickSettings.normalizedInterval(HapTickSettings.interval(forBPM: bpm))
+            }
+        }
+
+        return store.settings.intervalSeconds
     }
 
     private func applyIntervalText(_ text: String) {
-        guard let interval = numericValue(from: text), interval >= HapTickSettings.minimumInterval else { return }
+        guard let interval = numericValue(from: text), interval > 0 else { return }
         store.setInterval(interval)
     }
 
@@ -306,12 +366,6 @@ struct PhoneSettingsView: View {
         Double(text.trimmingCharacters(in: .whitespacesAndNewlines))
     }
 
-    private func supportedBPMSuggestion(for bpm: Double) -> Double {
-        guard bpm > HapTickSettings.maximumBPM else { return bpm }
-
-        let power = ceil(log2(bpm / HapTickSettings.maximumBPM))
-        return bpm / pow(2, power)
-    }
 }
 
 #Preview {

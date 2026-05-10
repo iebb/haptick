@@ -24,6 +24,7 @@ struct TimerScreen: View {
                     let ringSize = max(112, min(availableWidth, availableHeight))
                     let intervalFontSize = min(46, ringSize * 0.35)
                     let lapPhase = shouldAnimateRing ? controller.spinnerPhase(at: timeline.date) : 0
+                    let valueColor: Color = controller.isBelowStyleMinimum ? .red : .white
 
                     ScrollView(.vertical) {
                         VStack(spacing: 14) {
@@ -45,7 +46,7 @@ struct TimerScreen: View {
 
                                         Text(controller.primaryValueLabel)
                                             .font(.system(size: intervalFontSize, weight: .semibold, design: .rounded))
-                                            .foregroundStyle(.white)
+                                            .foregroundStyle(valueColor)
                                             .monospacedDigit()
                                             .allowsTightening(true)
                                             .minimumScaleFactor(0.5)
@@ -54,9 +55,20 @@ struct TimerScreen: View {
 
                                         Text(controller.unitLabel)
                                             .font(.system(size: min(14, ringSize * 0.11), weight: .regular, design: .rounded))
-                                            .foregroundStyle(.white.opacity(0.56))
+                                            .foregroundStyle(controller.isBelowStyleMinimum ? .red.opacity(0.72) : .white.opacity(0.56))
                                             .minimumScaleFactor(0.75)
                                             .lineLimit(1)
+
+                                        if let warning = controller.styleSpeedWarning {
+                                            Text(warning)
+                                                .font(.system(size: min(10, ringSize * 0.08), weight: .medium, design: .rounded))
+                                                .foregroundStyle(.red.opacity(0.88))
+                                                .multilineTextAlignment(.center)
+                                                .lineLimit(2)
+                                                .minimumScaleFactor(0.7)
+                                                .frame(maxWidth: ringSize * 0.74)
+                                                .padding(.top, 2)
+                                        }
                                     }
                                     .padding(.horizontal, 12)
 
@@ -158,6 +170,10 @@ struct TimerScreen: View {
 
             LazyVGrid(columns: styleGridColumns, spacing: 7) {
                 ForEach(HapticStyle.allCases) { style in
+                    let isSelected = controller.hapticStyle == style
+                    let isUnsupported = controller.isStyleUnsupported(style)
+                    let styleColor: Color = isUnsupported ? .red : (isSelected ? .cyan : .white.opacity(0.72))
+
                     Button {
                         controller.hapticStyle = style
                         controller.pulseNow()
@@ -165,9 +181,21 @@ struct TimerScreen: View {
                         Image(systemName: style.symbolName)
                             .font(.system(size: 17, weight: .regular))
                             .frame(width: 44, height: 36)
+                            .foregroundStyle(styleColor)
+                            .background {
+                                if isSelected {
+                                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                        .fill(styleColor.opacity(0.18))
+                                }
+                            }
+                            .overlay {
+                                if isSelected {
+                                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                        .stroke(styleColor.opacity(0.75), lineWidth: 1)
+                                }
+                            }
                     }
-                    .buttonStyle(.bordered)
-                    .tint(controller.hapticStyle == style ? .cyan : .gray)
+                    .buttonStyle(.plain)
                     .accessibilityLabel(style.label)
                 }
             }

@@ -12,7 +12,7 @@ flowchart TD
     Unit --> Interval{"Interval selected?"}
     Interval -->|Yes| EditInterval["Type interval seconds"]
     Interval -->|No| EditBPM["Type BPM"]
-    EditInterval --> ValidateInterval["Clamp interval to >= 0.8s"]
+    EditInterval --> ValidateInterval["Warn when interval < 0.2s"]
     EditBPM --> ConvertBPM["Convert BPM to interval seconds"]
     ValidateInterval --> Save["Save settings locally"]
     ConvertBPM --> Save
@@ -37,7 +37,10 @@ Key rules:
 - The user edits either Interval or BPM, never both at the same time.
 - Interval is the stored source of truth.
 - BPM is converted to interval seconds before saving.
-- The only numeric floor is `0.8s` interval.
+- `0.2s` is the global supported interval floor. Typed values below it stay visible and are shown as invalid instead of being clamped to `0.2s`.
+- The global maximum BPM is derived from the interval floor: `60 / 0.2s = 300 BPM`.
+- On Apple Watch, interval crown steps are `0.05s` below `1.5s`, then `0.1s` up to `15s`, `0.2s` up to `30s`, and `0.5s` after that.
+- The app warns in red when a haptic style is probably too slow for the current interval, but does not clamp the value. Unsupported style choices are red, and only the selected style keeps a border.
 
 ## watchOS App
 

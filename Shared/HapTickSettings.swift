@@ -54,6 +54,20 @@ enum HapticStyle: String, CaseIterable, Identifiable, Codable {
         case .click: "smallcircle.filled.circle"
         }
     }
+
+    var recommendedMinimumInterval: Double {
+        switch self {
+        case .notification: 0.75
+        case .directionUp: 0.2
+        case .directionDown: 0.2
+        case .success: 0.3
+        case .failure: 0.35
+        case .retry: 0.35
+        case .start: 0.2
+        case .stop: 0.25
+        case .click: 0.2
+        }
+    }
 }
 
 struct HapTickSettings: Equatable, Codable {
@@ -62,15 +76,21 @@ struct HapTickSettings: Equatable, Codable {
     var motionToggleEnabled: Bool
     var displayMode: DisplayMode
 
-    static let minimumInterval = 0.8
+    static let minimumInterval = 0.2
     static let maximumInterval = 999.0
     static let minimumBPM = 0.1
-    static let maximumBPM = 75.0
+    static let maximumBPM = 60 / minimumInterval
+    static let fineIntervalThreshold = 1.5
     static let mediumIntervalThreshold = 15.0
     static let slowIntervalThreshold = 30.0
-    static let mediumIntervalPosition = 142.0
-    static let slowIntervalPosition = 217.0
-    static let maximumIntervalPosition = slowIntervalPosition + ((maximumInterval - slowIntervalThreshold) / 0.5).rounded()
+    static let fineIntervalStep = 0.05
+    static let mediumIntervalStep = 0.1
+    static let slowIntervalStep = 0.2
+    static let longIntervalStep = 0.5
+    static let fineIntervalPosition = ((fineIntervalThreshold - minimumInterval) / fineIntervalStep).rounded()
+    static let mediumIntervalPosition = fineIntervalPosition + ((mediumIntervalThreshold - fineIntervalThreshold) / mediumIntervalStep).rounded()
+    static let slowIntervalPosition = mediumIntervalPosition + ((slowIntervalThreshold - mediumIntervalThreshold) / slowIntervalStep).rounded()
+    static let maximumIntervalPosition = slowIntervalPosition + ((maximumInterval - slowIntervalThreshold) / longIntervalStep).rounded()
 
     static let intervalKey = "timer.intervalSeconds"
     static let hapticStyleKey = "timer.hapticStyle"
@@ -112,7 +132,8 @@ struct HapTickSettings: Equatable, Codable {
     }
 
     var intervalLabel: String {
-        "\(Self.formattedNumber(intervalSeconds, maximumFractionDigits: 1))s"
+        let digits = intervalSeconds < Self.fineIntervalThreshold ? 2 : 1
+        return "\(Self.formattedNumber(intervalSeconds, maximumFractionDigits: digits))s"
     }
 
     var bpmValue: Double {
@@ -141,6 +162,61 @@ struct HapTickSettings: Equatable, Codable {
         }
     }
 
+    var isBelowSupportedMinimum: Bool {
+        intervalSeconds + 0.0001 < Self.minimumInterval
+    }
+
+    var isBelowStyleMinimum: Bool {
+        isStyleUnsupported(hapticStyle)
+    }
+
+    func isStyleUnsupported(_ style: HapticStyle) -> Bool {
+        intervalSeconds + 0.0001 < max(Self.minimumInterval, style.recommendedMinimumInterval)
+    }
+
+    func styleMinimumIntervalLabel(for style: HapticStyle) -> String {
+        let minimum = max(Self.minimumInterval, style.recommendedMinimumInterval)
+        let digits = minimum < Self.fineIntervalThreshold ? 2 : 1
+        return "\(Self.formattedNumber(minimum, maximumFractionDigits: digits))s"
+    }
+
+    var styleMinimumIntervalLabel: String {
+        styleMinimumIntervalLabel(for: hapticStyle)
+    }
+
+    func styleLimitLabel(for style: HapticStyle) -> String {
+        let minimum = max(Self.minimumInterval, style.recommendedMinimumInterval)
+
+        switch displayMode {
+        case .interval:
+            return styleMinimumIntervalLabel(for: style)
+        case .bpm:
+            let bpm = 60 / minimum
+            let digits = bpm < 10 ? 1 : 0
+            return "\(Self.formattedNumber(bpm, maximumFractionDigits: digits)) BPM"
+        }
+    }
+
+    var styleSpeedWarning: String? {
+        if isBelowSupportedMinimum {
+            switch displayMode {
+            case .interval:
+                return "Slow down to at least \(Self.formattedNumber(Self.minimumInterval, maximumFractionDigits: 2))s."
+            case .bpm:
+                return "Slow down to \(Self.formattedNumber(Self.maximumBPM, maximumFractionDigits: 0)) BPM or lower."
+            }
+        }
+
+        guard isBelowStyleMinimum else { return nil }
+
+        switch displayMode {
+        case .interval:
+            return "Slow down to \(styleMinimumIntervalLabel), or choose another supported style."
+        case .bpm:
+            return "Slow down to \(styleLimitLabel(for: hapticStyle)) or lower, or choose another supported style."
+        }
+    }
+
     static func load(from defaults: UserDefaults = .standard) -> Self {
         let interval = defaults.object(forKey: intervalKey) as? Double ?? 1.0
         let style = defaults.string(forKey: hapticStyleKey).flatMap(HapticStyle.init(rawValue:)) ?? .notification
@@ -163,36 +239,48 @@ struct HapTickSettings: Equatable, Codable {
 
     static func normalizedInterval(_ value: Double) -> Double {
         guard value.isFinite else { return minimumInterval }
-        return min(max(value, minimumInterval), maximumInterval)
+        return min(max(value, 0.001), maximumInterval)
     }
 
     static func intervalPosition(for value: Double) -> Double {
-        let interval = normalizedInterval(value)
+        let interval = max(normalizedInterval(value), minimumInterval)
+
+        if interval <= fineIntervalThreshold {
+            return ((interval - minimumInterval) / fineIntervalStep).rounded()
+        }
 
         if interval <= mediumIntervalThreshold {
-            return ((interval - minimumInterval) / 0.1).rounded()
+            return fineIntervalPosition + ((interval - fineIntervalThreshold) / mediumIntervalStep).rounded()
         }
 
         if interval <= slowIntervalThreshold {
-            return mediumIntervalPosition + ((interval - mediumIntervalThreshold) / 0.2).rounded()
+            return mediumIntervalPosition + ((interval - mediumIntervalThreshold) / slowIntervalStep).rounded()
         }
 
-        return slowIntervalPosition + ((interval - slowIntervalThreshold) / 0.5).rounded()
+        return slowIntervalPosition + ((interval - slowIntervalThreshold) / longIntervalStep).rounded()
     }
 
     static func interval(forPosition value: Double) -> Double {
         let position = min(max(value.rounded(), 0), maximumIntervalPosition)
         let interval: Double
 
-        if position <= mediumIntervalPosition {
-            interval = minimumInterval + position * 0.1
+        let step: Double
+
+        if position <= fineIntervalPosition {
+            interval = minimumInterval + position * fineIntervalStep
+            step = fineIntervalStep
+        } else if position <= mediumIntervalPosition {
+            interval = fineIntervalThreshold + (position - fineIntervalPosition) * mediumIntervalStep
+            step = mediumIntervalStep
         } else if position <= slowIntervalPosition {
-            interval = mediumIntervalThreshold + (position - mediumIntervalPosition) * 0.2
+            interval = mediumIntervalThreshold + (position - mediumIntervalPosition) * slowIntervalStep
+            step = slowIntervalStep
         } else {
-            interval = slowIntervalThreshold + (position - slowIntervalPosition) * 0.5
+            interval = slowIntervalThreshold + (position - slowIntervalPosition) * longIntervalStep
+            step = longIntervalStep
         }
 
-        return normalizedInterval((interval * 10).rounded() / 10)
+        return normalizedInterval(round(interval, toNearest: step))
     }
 
     static func interval(forBPM value: Double) -> Double {
@@ -209,5 +297,10 @@ struct HapTickSettings: Equatable, Codable {
         formatter.maximumFractionDigits = maximumFractionDigits
         formatter.usesGroupingSeparator = false
         return formatter.string(from: NSNumber(value: value)) ?? "\(value)"
+    }
+
+    private static func round(_ value: Double, toNearest step: Double) -> Double {
+        guard value.isFinite, step > 0 else { return value }
+        return (value / step).rounded() * step
     }
 }

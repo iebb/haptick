@@ -82,6 +82,7 @@ final class TimerController: NSObject, ObservableObject {
         if motionToggleEnabled {
             startMotionDetection()
         }
+
     }
 
     var intervalLabel: String {
@@ -94,6 +95,18 @@ final class TimerController: NSObject, ObservableObject {
 
     var unitLabel: String {
         currentSettings.unitLabel
+    }
+
+    var styleSpeedWarning: String? {
+        currentSettings.styleSpeedWarning
+    }
+
+    var isBelowStyleMinimum: Bool {
+        currentSettings.isBelowStyleMinimum
+    }
+
+    func isStyleUnsupported(_ style: HapticStyle) -> Bool {
+        currentSettings.isStyleUnsupported(style)
     }
 
     var topLabel: String {

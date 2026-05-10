@@ -16,6 +16,7 @@
 		7E0B0F0581631B1461D5BA1A /* TimerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6155CFCDC13B78C3C0377DAF /* TimerController.swift */; };
 		82A3B6D01A5759A9ABABA8A6 /* WatchConnectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 397F370D24A5B14A868234C8 /* WatchConnectivity.framework */; };
 		8FAE00189492EDF01C7DDA7F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FD04ED50738AE67F9266224F /* Assets.xcassets */; };
+		92F2A46CE69F76C241FACA4A /* HapticMeasurement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92315102C5CE88C6CCDA7E3A /* HapticMeasurement.swift */; };
 		A2F17CCEA22DE91BF0915A59 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7D696192DD2C2BBDCE9D3220 /* Assets.xcassets */; };
 		AF037CF2068B13639E5685BF /* PhoneSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76849BFB442BF93CBD875260 /* PhoneSettingsView.swift */; };
 		D69D85AF72E962BF99C3E41B /* PhoneSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6A6EE0BACEBABCB4FD7B164 /* PhoneSettingsStore.swift */; };
@@ -59,6 +60,7 @@
 		7F78318FAC662E893D43DC1F /* HapTick.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = HapTick.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		917FD95D4DE083FAED78755C /* HapTickPhoneApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapTickPhoneApp.swift; sourceTree = "<group>"; };
 		919F97E91FDD34F6167DBFE9 /* AppFlows.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = AppFlows.md; sourceTree = "<group>"; };
+		92315102C5CE88C6CCDA7E3A /* HapticMeasurement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticMeasurement.swift; sourceTree = "<group>"; };
 		B6A6EE0BACEBABCB4FD7B164 /* PhoneSettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneSettingsStore.swift; sourceTree = "<group>"; };
 		DB708039C275921005BCCCB1 /* TimerScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerScreen.swift; sourceTree = "<group>"; };
 		E371F466FABDF1EF8C034C75 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -103,6 +105,7 @@
 			children = (
 				7D696192DD2C2BBDCE9D3220 /* Assets.xcassets */,
 				1AC888E8F91260F647B9FE65 /* HapTickApp.swift */,
+				92315102C5CE88C6CCDA7E3A /* HapticMeasurement.swift */,
 				E371F466FABDF1EF8C034C75 /* Info.plist */,
 				6155CFCDC13B78C3C0377DAF /* TimerController.swift */,
 				DB708039C275921005BCCCB1 /* TimerScreen.swift */,
@@ -264,6 +267,7 @@
 			files = (
 				FF22538B621AFD774BF833EB /* HapTickApp.swift in Sources */,
 				3CE34319F20BB1069A26E6F7 /* HapTickSettings.swift in Sources */,
+				92F2A46CE69F76C241FACA4A /* HapticMeasurement.swift in Sources */,
 				7E0B0F0581631B1461D5BA1A /* TimerController.swift in Sources */,
 				D84DADB69EFCA2B72EA192BF /* TimerScreen.swift in Sources */,
 				31B6EBF6E0DBC4C0AB4FFD94 /* WatchSettingsSync.swift in Sources */,
