@@ -132,8 +132,11 @@ struct HapTickSettings: Equatable, Codable {
     }
 
     var intervalLabel: String {
-        let digits = intervalSeconds < Self.fineIntervalThreshold ? 2 : 1
-        return "\(Self.formattedNumber(intervalSeconds, maximumFractionDigits: digits))s"
+        intervalLabel(maximumFractionDigits: intervalSeconds < Self.fineIntervalThreshold ? 2 : 1)
+    }
+
+    func intervalLabel(maximumFractionDigits: Int) -> String {
+        "\(Self.formattedNumber(intervalSeconds, maximumFractionDigits: maximumFractionDigits))s"
     }
 
     var bpmValue: Double {

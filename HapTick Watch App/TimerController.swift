@@ -42,11 +42,14 @@ final class TimerController: NSObject, ObservableObject {
             persistAndBroadcastSettings()
         }
     }
+    @Published private var usesSyncedIntervalPrecision = false
 
     private var pulseTimer: Timer?
     private var runtimeSession: WKExtendedRuntimeSession?
+    private var runtimeRestartTask: Task<Void, Never>?
     private let motionManager = CMMotionManager()
     private let motionLogger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "ad.neko.haptick.watchapp", category: "Motion")
+    private let runtimeLogger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "ad.neko.haptick.watchapp", category: "Runtime")
     private let settingsSync = WatchSettingsSync()
     private var isApplyingRemoteSettings = false
     private var lastSuccessfulFlipDate = Date.distantPast
@@ -64,6 +67,7 @@ final class TimerController: NSObject, ObservableObject {
     private static let maximumFlipDuration: TimeInterval = 1.0
     private static let motionRearmAccelerationThreshold = 0.28
     private static let flipGravityThreshold = 0.6
+    private static let runtimeRestartDelay: TimeInterval = 1.0
 
     override init() {
         let settings = HapTickSettings.load()
@@ -86,11 +90,14 @@ final class TimerController: NSObject, ObservableObject {
     }
 
     var intervalLabel: String {
-        currentSettings.intervalLabel
+        currentSettings.intervalLabel(maximumFractionDigits: intervalFractionDigits)
     }
 
     var primaryValueLabel: String {
-        currentSettings.primaryValueLabel
+        switch displayMode {
+        case .interval: intervalLabel
+        case .bpm: currentSettings.bpmLabel
+        }
     }
 
     var unitLabel: String {
@@ -144,6 +151,8 @@ final class TimerController: NSObject, ObservableObject {
     }
 
     func updateCrownValue(_ value: Double) {
+        usesSyncedIntervalPrecision = false
+
         switch displayMode {
         case .interval:
             intervalSeconds = HapTickSettings.interval(forPosition: value)
@@ -153,6 +162,7 @@ final class TimerController: NSObject, ObservableObject {
     }
 
     func toggleDisplayMode() {
+        usesSyncedIntervalPrecision = false
         displayMode = displayMode == .interval ? .bpm : .interval
     }
 
@@ -166,12 +176,14 @@ final class TimerController: NSObject, ObservableObject {
         pulseCount = 0
         anchorDate = Date()
         nextPulseDate = anchorDate.addingTimeInterval(intervalSeconds)
-        startRuntimeSession()
+        startRuntimeSessionIfNeeded()
         scheduleNextPulse()
     }
 
     func stop() {
         isRunning = false
+        runtimeRestartTask?.cancel()
+        runtimeRestartTask = nil
         pulseTimer?.invalidate()
         pulseTimer = nil
         runtimeSession?.invalidate()
@@ -183,6 +195,12 @@ final class TimerController: NSObject, ObservableObject {
 
     func pulseNow() {
         WKInterfaceDevice.current().play(hapticStyle.type)
+    }
+
+    func resumeRuntimeSessionIfNeeded() {
+        guard isRunning else { return }
+
+        startRuntimeSessionIfNeeded()
     }
 
     func spinnerRotation(at date: Date) -> Double {
@@ -228,12 +246,79 @@ final class TimerController: NSObject, ObservableObject {
         scheduleNextPulse()
     }
 
-    private func startRuntimeSession() {
-        runtimeSession?.invalidate()
+    private func startRuntimeSessionIfNeeded() {
+        if let runtimeSession {
+            switch runtimeSession.state {
+            case .running, .scheduled:
+                return
+            case .notStarted:
+                runtimeLogger.info("Starting existing extended runtime session")
+                runtimeSession.start()
+                return
+            case .invalid:
+                self.runtimeSession = nil
+            @unknown default:
+                self.runtimeSession = nil
+            }
+        }
+
         let session = WKExtendedRuntimeSession()
         session.delegate = self
         runtimeSession = session
+        runtimeLogger.info("Starting extended runtime session")
         session.start()
+    }
+
+    private func scheduleRuntimeSessionRestart() {
+        runtimeRestartTask?.cancel()
+        runtimeRestartTask = Task { [weak self] in
+            let delay = UInt64(Self.runtimeRestartDelay * 1_000_000_000)
+            try? await Task.sleep(nanoseconds: delay)
+
+            await MainActor.run {
+                guard let self, self.isRunning else { return }
+
+                self.runtimeLogger.info("Retrying extended runtime session")
+                self.startRuntimeSessionIfNeeded()
+            }
+        }
+    }
+
+    private func handleRuntimeSessionDidStart(_ session: WKExtendedRuntimeSession) {
+        guard session === runtimeSession else { return }
+
+        runtimeLogger.info("Extended runtime session started")
+    }
+
+    private func handleRuntimeSessionWillExpire(_ session: WKExtendedRuntimeSession) {
+        guard session === runtimeSession else { return }
+
+        runtimeLogger.warning("Extended runtime session will expire")
+    }
+
+    private func handleRuntimeSessionInvalidation(
+        _ session: WKExtendedRuntimeSession,
+        reason: WKExtendedRuntimeSessionInvalidationReason,
+        error: Error?
+    ) {
+        guard session === runtimeSession else { return }
+
+        let errorDescription = error?.localizedDescription ?? "none"
+        runtimeLogger.warning("Extended runtime session invalidated reason=\(reason.rawValue, privacy: .public) error=\(errorDescription, privacy: .public)")
+        runtimeSession = nil
+
+        guard isRunning else { return }
+
+        switch reason {
+        case .expired, .suppressedBySystem, .error, .sessionInProgress:
+            scheduleRuntimeSessionRestart()
+        case .resignedFrontmost:
+            stop()
+        case .none:
+            break
+        @unknown default:
+            scheduleRuntimeSessionRestart()
+        }
     }
 
     private var bpmValue: Double {
@@ -253,6 +338,14 @@ final class TimerController: NSObject, ObservableObject {
         )
     }
 
+    private var intervalFractionDigits: Int {
+        if usesSyncedIntervalPrecision {
+            3
+        } else {
+            intervalSeconds < HapTickSettings.fineIntervalThreshold ? 2 : 1
+        }
+    }
+
     private func persistAndBroadcastSettings() {
         guard !isApplyingRemoteSettings else { return }
 
@@ -267,6 +360,7 @@ final class TimerController: NSObject, ObservableObject {
         hapticStyle = settings.hapticStyle
         displayMode = settings.displayMode
         motionToggleEnabled = settings.motionToggleEnabled
+        usesSyncedIntervalPrecision = true
         isApplyingRemoteSettings = false
         settings.save()
     }
@@ -413,13 +507,25 @@ extension HapticStyle {
 }
 
 extension TimerController: WKExtendedRuntimeSessionDelegate {
-    nonisolated func extendedRuntimeSessionDidStart(_ extendedRuntimeSession: WKExtendedRuntimeSession) {}
+    nonisolated func extendedRuntimeSessionDidStart(_ extendedRuntimeSession: WKExtendedRuntimeSession) {
+        Task { @MainActor in
+            self.handleRuntimeSessionDidStart(extendedRuntimeSession)
+        }
+    }
 
-    nonisolated func extendedRuntimeSessionWillExpire(_ extendedRuntimeSession: WKExtendedRuntimeSession) {}
+    nonisolated func extendedRuntimeSessionWillExpire(_ extendedRuntimeSession: WKExtendedRuntimeSession) {
+        Task { @MainActor in
+            self.handleRuntimeSessionWillExpire(extendedRuntimeSession)
+        }
+    }
 
     nonisolated func extendedRuntimeSession(
         _ extendedRuntimeSession: WKExtendedRuntimeSession,
         didInvalidateWith reason: WKExtendedRuntimeSessionInvalidationReason,
         error: Error?
-    ) {}
+    ) {
+        Task { @MainActor in
+            self.handleRuntimeSessionInvalidation(extendedRuntimeSession, reason: reason, error: error)
+        }
+    }
 }

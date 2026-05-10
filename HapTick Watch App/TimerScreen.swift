@@ -139,6 +139,11 @@ struct TimerScreen: View {
             .onChange(of: controller.displayMode) { _, _ in
                 syncCrownValue()
             }
+            .onChange(of: scenePhase) { _, newPhase in
+                guard newPhase == .active else { return }
+
+                controller.resumeRuntimeSessionIfNeeded()
+            }
         }
     }
 
