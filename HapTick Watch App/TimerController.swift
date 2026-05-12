@@ -16,8 +16,7 @@ final class TimerController: NSObject, ObservableObject {
             persistAndBroadcastSettings()
 
             guard isRunning else { return }
-            anchorDate = Date()
-            nextPulseDate = anchorDate.addingTimeInterval(intervalSeconds)
+            resetPulseTimeline()
             scheduleNextPulse()
         }
     }
@@ -44,7 +43,7 @@ final class TimerController: NSObject, ObservableObject {
     }
     @Published private var usesSyncedIntervalPrecision = false
 
-    private var pulseTimer: Timer?
+    private var pulseTimer: DispatchSourceTimer?
     private var runtimeSession: WKExtendedRuntimeSession?
     private var runtimeRestartTask: Task<Void, Never>?
     private let motionManager = CMMotionManager()
@@ -58,6 +57,9 @@ final class TimerController: NSObject, ObservableObject {
     private var lastStableFlipDate = Date.distantPast
     private var motionToggleArmed = true
     private var lastMotionSampleLogDate = Date.distantPast
+    private var timelineStartDate = Date()
+    private var timelineStartUptime: TimeInterval = ProcessInfo.processInfo.systemUptime
+    private var nextPulseIndex = 1
 
     static let minimumInterval = HapTickSettings.minimumInterval
     static let maximumInterval = HapTickSettings.maximumInterval
@@ -188,8 +190,7 @@ final class TimerController: NSObject, ObservableObject {
         guard !isRunning else { return }
         isRunning = true
         pulseCount = 0
-        anchorDate = Date()
-        nextPulseDate = anchorDate.addingTimeInterval(intervalSeconds)
+        resetPulseTimeline()
         startRuntimeSessionIfNeeded()
         scheduleNextPulse()
     }
@@ -198,13 +199,11 @@ final class TimerController: NSObject, ObservableObject {
         isRunning = false
         runtimeRestartTask?.cancel()
         runtimeRestartTask = nil
-        pulseTimer?.invalidate()
-        pulseTimer = nil
+        cancelPulseTimer()
         runtimeSession?.invalidate()
         runtimeSession = nil
         pulseCount = 0
-        anchorDate = Date()
-        nextPulseDate = anchorDate.addingTimeInterval(intervalSeconds)
+        resetPulseTimeline()
     }
 
     func pulseNow() {
@@ -226,7 +225,7 @@ final class TimerController: NSObject, ObservableObject {
     func spinnerPhase(at date: Date) -> Double {
         guard isRunning else { return 0 }
 
-        let elapsed = date.timeIntervalSince(anchorDate)
+        let elapsed = date.timeIntervalSince(timelineStartDate)
         return elapsed.truncatingRemainder(dividingBy: intervalSeconds) / intervalSeconds
     }
 
@@ -238,26 +237,77 @@ final class TimerController: NSObject, ObservableObject {
     }
 
     private func scheduleNextPulse() {
-        pulseTimer?.invalidate()
+        cancelPulseTimer()
 
-        let delay = max(nextPulseDate.timeIntervalSinceNow, 0.05)
-        let timer = Timer(timeInterval: delay, repeats: false) { [weak self] _ in
+        let nowUptime = ProcessInfo.processInfo.systemUptime
+        if pulseUptime(for: nextPulseIndex) <= nowUptime {
+            nextPulseIndex = nextFuturePulseIndex(at: nowUptime)
+            nextPulseDate = pulseDate(for: nextPulseIndex)
+        }
+
+        let delay = max(pulseUptime(for: nextPulseIndex) - nowUptime, 0.001)
+        let timer = DispatchSource.makeTimerSource(queue: .main)
+        timer.schedule(deadline: .now() + delay, leeway: .milliseconds(1))
+        timer.setEventHandler { [weak self] in
             Task { @MainActor in
                 self?.firePulse()
             }
         }
         pulseTimer = timer
-        RunLoop.main.add(timer, forMode: .common)
+        timer.resume()
     }
 
     private func firePulse() {
         guard isRunning else { return }
 
+        let firedPulseIndex = nextPulseIndex
+        let expectedUptime = pulseUptime(for: firedPulseIndex)
+        let actualUptime = ProcessInfo.processInfo.systemUptime
+        let jitter = actualUptime - expectedUptime
+
         pulseNow()
         pulseCount += 1
-        anchorDate = Date()
-        nextPulseDate = anchorDate.addingTimeInterval(intervalSeconds)
+
+        nextPulseIndex = max(firedPulseIndex + 1, nextFuturePulseIndex(at: actualUptime))
+        nextPulseDate = pulseDate(for: nextPulseIndex)
+        logPulseJitterIfNeeded(jitter)
         scheduleNextPulse()
+    }
+
+    private func resetPulseTimeline() {
+        let nowDate = Date()
+        let nowUptime = ProcessInfo.processInfo.systemUptime
+
+        timelineStartDate = nowDate
+        timelineStartUptime = nowUptime
+        nextPulseIndex = 1
+        anchorDate = nowDate
+        nextPulseDate = pulseDate(for: nextPulseIndex)
+    }
+
+    private func cancelPulseTimer() {
+        pulseTimer?.setEventHandler {}
+        pulseTimer?.cancel()
+        pulseTimer = nil
+    }
+
+    private func pulseUptime(for index: Int) -> TimeInterval {
+        timelineStartUptime + TimeInterval(index) * intervalSeconds
+    }
+
+    private func pulseDate(for index: Int) -> Date {
+        timelineStartDate.addingTimeInterval(TimeInterval(index) * intervalSeconds)
+    }
+
+    private func nextFuturePulseIndex(at uptime: TimeInterval) -> Int {
+        let elapsed = max(uptime - timelineStartUptime, 0)
+        return max(Int(floor(elapsed / intervalSeconds)) + 1, 1)
+    }
+
+    private func logPulseJitterIfNeeded(_ jitter: TimeInterval) {
+        guard abs(jitter) >= 0.015 else { return }
+
+        runtimeLogger.debug("Pulse jitter=\(jitter, privacy: .public)s interval=\(self.intervalSeconds, privacy: .public)s")
     }
 
     private func startRuntimeSessionIfNeeded() {
