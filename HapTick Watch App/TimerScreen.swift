@@ -23,7 +23,7 @@ struct TimerScreen: View {
                     let availableHeight = geometry.size.height - contentPadding * 2
                     let ringSize = max(112, min(availableWidth, availableHeight))
                     let intervalFontSize = min(46, ringSize * 0.35)
-                    let lapPhase = shouldAnimateRing ? controller.spinnerPhase(at: timeline.date) : 0
+                    let ringTurns = shouldAnimateRing ? controller.spinnerTurns(at: timeline.date) : 0
                     let valueColor: Color = controller.isBelowStyleMinimum ? .red : .white
 
                     ScrollView(.vertical) {
@@ -31,8 +31,7 @@ struct TimerScreen: View {
                             VStack(spacing: 0) {
                                 ZStack {
                                     PulseRing(
-                                        phase: lapPhase,
-                                        lapCount: controller.pulseCount,
+                                        turns: ringTurns,
                                         isRunning: controller.isRunning
                                     )
 
@@ -262,33 +261,28 @@ private struct CrownHint: View {
 }
 
 private struct PulseRing: View {
-    let phase: Double
-    let lapCount: Int
+    let turns: Double
     let isRunning: Bool
+    private let arcDegrees = 60.0
 
-    private var currentProgress: Double {
-        if isRunning {
-            max(min(phase, 1), 0.003)
-        } else {
-            0.003
-        }
+    private var headAngle: Double {
+        isRunning ? -90 + turns * 360 : -90
     }
 
-    private var previousLapColors: [Color] {
-        lapColors(for: max(lapCount - 1, 0), brightness: 0.55, opacity: 0.58)
+    private var tailAngle: Double {
+        isRunning ? max(-90, headAngle - arcDegrees) : -90
     }
 
-    private var currentLapColors: [Color] {
-        lapColors(for: lapCount, brightness: 1.0, opacity: isRunning ? 1 : 0.35)
+    private var arcColors: [Color] {
+        ringColors(brightness: 1.0, opacity: isRunning ? 1 : 0.35)
     }
 
-    private func lapColors(for lap: Int, brightness: Double, opacity: Double) -> [Color] {
-        let hue = (Double(lap % 12) / 12 + phase * 0.18).truncatingRemainder(dividingBy: 1)
+    private func ringColors(brightness: Double, opacity: Double) -> [Color] {
+        let hue = (turns * 0.18).truncatingRemainder(dividingBy: 1)
         let startColor = Color(hue: hue, saturation: 0.95, brightness: brightness).opacity(opacity)
         return [
-            startColor,
-            Color(hue: (hue + 0.08).truncatingRemainder(dividingBy: 1), saturation: 0.9, brightness: brightness).opacity(opacity),
             Color(hue: (hue + 0.18).truncatingRemainder(dividingBy: 1), saturation: 0.88, brightness: brightness).opacity(opacity),
+            Color(hue: (hue + 0.08).truncatingRemainder(dividingBy: 1), saturation: 0.9, brightness: brightness).opacity(opacity),
             startColor
         ]
     }
@@ -298,38 +292,50 @@ private struct PulseRing: View {
             Circle()
                 .stroke(.white.opacity(0.13), lineWidth: 17)
 
-            if isRunning && lapCount > 0 {
-                Circle()
-                    .stroke(
-                        AngularGradient(
-                            colors: previousLapColors,
-                            center: .center,
-                            startAngle: .degrees(-90),
-                            endAngle: .degrees(270)
-                        ),
-                        style: StrokeStyle(lineWidth: 17, lineCap: .round)
-                    )
-                    .opacity(0.72)
-            }
-
-            Circle()
-                .trim(from: 0, to: currentProgress)
+            ArcSegment(startAngle: tailAngle, endAngle: headAngle)
                 .stroke(
                     AngularGradient(
-                        colors: currentLapColors,
+                        colors: arcColors,
                         center: .center,
-                        startAngle: .degrees(-90),
-                        endAngle: .degrees(270)
+                        startAngle: .degrees(tailAngle),
+                        endAngle: .degrees(headAngle)
                     ),
                     style: StrokeStyle(lineWidth: 17, lineCap: .round)
                 )
-                .rotationEffect(.degrees(-90))
 
             Circle()
                 .stroke(.white.opacity(isRunning ? 0.18 : 0.08), lineWidth: 1)
                 .padding(10)
         }
         .padding(7)
+    }
+}
+
+private struct ArcSegment: Shape {
+    var startAngle: Double
+    var endAngle: Double
+
+    var animatableData: AnimatablePair<Double, Double> {
+        get { AnimatablePair(startAngle, endAngle) }
+        set {
+            startAngle = newValue.first
+            endAngle = newValue.second
+        }
+    }
+
+    func path(in rect: CGRect) -> Path {
+        let lineInset: CGFloat = 17 / 2
+        let radius = max(min(rect.width, rect.height) / 2 - lineInset, 0)
+        let center = CGPoint(x: rect.midX, y: rect.midY)
+        var path = Path()
+        path.addArc(
+            center: center,
+            radius: radius,
+            startAngle: .degrees(startAngle),
+            endAngle: .degrees(endAngle),
+            clockwise: false
+        )
+        return path
     }
 }
 

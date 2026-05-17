@@ -222,11 +222,17 @@ final class TimerController: NSObject, ObservableObject {
         return spinnerPhase(at: date) * 360 - 90
     }
 
+    func spinnerTurns(at date: Date) -> Double {
+        guard isRunning else { return 0 }
+
+        let elapsed = max(date.timeIntervalSince(timelineStartDate), 0)
+        return elapsed / intervalSeconds
+    }
+
     func spinnerPhase(at date: Date) -> Double {
         guard isRunning else { return 0 }
 
-        let elapsed = date.timeIntervalSince(timelineStartDate)
-        return elapsed.truncatingRemainder(dividingBy: intervalSeconds) / intervalSeconds
+        return spinnerTurns(at: date).truncatingRemainder(dividingBy: 1)
     }
 
     func remainingLabel(at date: Date) -> String {
