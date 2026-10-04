@@ -1,4 +1,4 @@
-# HapTick App Store Metadata - en-US
+# HapTick App Store Metadata - en-GB
 
 Name: HapTick
 

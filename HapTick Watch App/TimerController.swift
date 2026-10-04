@@ -42,6 +42,8 @@ final class TimerController: NSObject, ObservableObject {
         }
     }
     @Published private var usesSyncedIntervalPrecision = false
+    @Published private(set) var compositionEnabled = false
+    @Published private(set) var composition = HapTickSettings.exampleComposition
 
     private var pulseTimer: DispatchSourceTimer?
     private var runtimeSession: WKExtendedRuntimeSession?
@@ -77,6 +79,8 @@ final class TimerController: NSObject, ObservableObject {
         hapticStyle = settings.hapticStyle
         displayMode = settings.displayMode
         motionToggleEnabled = settings.motionToggleEnabled
+        compositionEnabled = settings.compositionEnabled
+        composition = settings.composition
         super.init()
 
         settingsSync.onSettingsReceived = { [weak self] settings in
@@ -122,7 +126,18 @@ final class TimerController: NSObject, ObservableObject {
     }
 
     var topLabel: String {
-        isRunning ? "\(pulseCount)" : "ready"
+        isRunning ? "\(pulseCount)" : L10n.text("ready")
+    }
+
+    var compositionLabel: String { currentSettings.compositionLabel }
+
+    func setCompositionEnabled(_ enabled: Bool) {
+        compositionEnabled = enabled
+        persistAndBroadcastSettings()
+        if isRunning {
+            resetPulseTimeline()
+            scheduleNextPulse()
+        }
     }
 
     var crownValue: Double {
@@ -187,7 +202,7 @@ final class TimerController: NSObject, ObservableObject {
     }
 
     func start() {
-        guard !isRunning else { return }
+        guard !isRunning, !currentSettings.isBelowStyleMinimum else { return }
         isRunning = true
         pulseCount = 0
         resetPulseTimeline()
@@ -236,7 +251,7 @@ final class TimerController: NSObject, ObservableObject {
     }
 
     func remainingLabel(at date: Date) -> String {
-        guard isRunning else { return "ready" }
+        guard isRunning else { return L10n.text("ready") }
 
         let remaining = max(nextPulseDate.timeIntervalSince(date), 0)
         return String(format: "%.1fs", remaining)
@@ -271,7 +286,7 @@ final class TimerController: NSObject, ObservableObject {
         let actualUptime = ProcessInfo.processInfo.systemUptime
         let jitter = actualUptime - expectedUptime
 
-        pulseNow()
+        WKInterfaceDevice.current().play(currentSettings.style(atBeat: firedPulseIndex - 1).type)
         pulseCount += 1
 
         nextPulseIndex = max(firedPulseIndex + 1, nextFuturePulseIndex(at: actualUptime))
@@ -404,7 +419,9 @@ final class TimerController: NSObject, ObservableObject {
             intervalSeconds: intervalSeconds,
             hapticStyle: hapticStyle,
             motionToggleEnabled: motionToggleEnabled,
-            displayMode: displayMode
+            displayMode: displayMode,
+            compositionEnabled: compositionEnabled,
+            composition: composition
         )
     }
 
@@ -430,9 +447,15 @@ final class TimerController: NSObject, ObservableObject {
         hapticStyle = settings.hapticStyle
         displayMode = settings.displayMode
         motionToggleEnabled = settings.motionToggleEnabled
+        compositionEnabled = settings.compositionEnabled
+        composition = settings.composition
         usesSyncedIntervalPrecision = true
         isApplyingRemoteSettings = false
         settings.save()
+        if isRunning {
+            resetPulseTimeline()
+            scheduleNextPulse()
+        }
     }
 
     private func startMotionDetection() {

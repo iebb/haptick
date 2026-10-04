@@ -35,13 +35,13 @@ final class WatchSettingsSync: NSObject, WCSessionDelegate {
 
     nonisolated func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) {
         Task { @MainActor in
-            onSettingsReceived?(HapTickSettings(dictionary: applicationContext))
+            onSettingsReceived?(HapTickSettings(dictionary: applicationContext, fallback: .load()))
         }
     }
 
     nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
         Task { @MainActor in
-            onSettingsReceived?(HapTickSettings(dictionary: message))
+            onSettingsReceived?(HapTickSettings(dictionary: message, fallback: .load()))
 
             if let rawCommand = message[HapTickMessage.playbackCommandKey] as? String,
                let command = HapTickPlaybackCommand(rawValue: rawCommand) {

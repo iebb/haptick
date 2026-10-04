@@ -9,3 +9,20 @@ xcuserdata/
 
 # Stale project generated before the HapTick rename.
 InterVib.xcodeproj/
+
+# Local signing and App Store Connect credentials.
+Local.xcconfig
+.env
+.env.*
+!.env.example
+AuthKey_*.p8
+*.p12
+*.mobileprovision
+*.cer
+*.pem
+*.key
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/api_key.json
+*.ipa
+*.xcarchive/

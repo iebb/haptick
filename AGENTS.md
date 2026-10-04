@@ -4,7 +4,8 @@
 
 - Always use `master` instead of `main` as the branch name.
 - Keep `project.yml` and `HapTick.xcodeproj/project.pbxproj` in sync when changing build settings. `project.yml` is the XcodeGen source of truth, but the checked-in Xcode project is used directly by local/Xcode Cloud workflows.
-- App Store Connect rejects duplicate build numbers. Current app version metadata is `MARKETING_VERSION = 1.1` and `CURRENT_PROJECT_VERSION = 3`.
+- App Store Connect rejects duplicate build numbers. Current app version metadata is `MARKETING_VERSION = 1.1` and `CURRENT_PROJECT_VERSION = 28`. Check App Store Connect before choosing a later number; Xcode Cloud manages the uploaded build number.
+- Signing teams and credentials belong in ignored `Local.xcconfig` or external release configuration. Xcode Cloud obtains its team from `CI_TEAM_ID`.
 
 ## Product Shape
 
@@ -12,8 +13,10 @@ HapTick is a native SwiftUI haptic metronome/timer with an iOS companion app and
 
 - Bundle IDs: `ad.neko.haptick` for iOS, `ad.neko.haptick.watchapp` for watchOS.
 - The watch app is the primary experience: tap the ring to start/stop, turn the Digital Crown to adjust the value, swipe left/right to switch Interval/BPM display, and optionally flip the wrist to start/stop.
-- The iOS companion edits one mode at a time, either interval or BPM, sends settings to the watch, and can send start/stop playback commands when the watch is reachable.
+- The iOS app edits one mode at a time, either interval or BPM, composes looping sequences with actual haptic style abbreviations, plays haptics locally, sends settings to the watch, and can send start/stop playback commands when the watch is reachable.
+- Both apps localize controls, statuses, warnings, and style abbreviations in English, Chinese (Simplified and Traditional), Japanese, French, and Spanish.
 - Settings are persisted and synced with `WatchConnectivity`.
+- A composition has 1–64 haptic style steps with one interval between beats. Sequence playback repeats in order, including the gap between the final and first steps. Disabling composition restores the selected single style.
 
 ## Watch UI And Timing Behavior
 

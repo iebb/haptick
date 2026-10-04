@@ -1,0 +1,65 @@
+{
+  "en-GB": {
+    "subtitle": "Haptic loops on iPhone & Watch",
+    "promotionalText": "Compose a repeating haptic sequence on iPhone, play it locally, or sync it to Apple Watch for an independent silent metronome.",
+    "description": "HapTick is a haptic timer and silent metronome for iPhone and Apple Watch.\n\nSet an interval or BPM, choose a single haptic style, or compose a sequence of up to 64 steps. Each step uses its haptic style abbreviation. Change, move, duplicate, or remove steps, then loop the whole sequence.\n\nPlay haptics while HapTick is open on iPhone, or sync your settings and composition to Apple Watch. The Watch saves its settings and works independently. Turn the Digital Crown to adjust the interval or BPM, tap the ring to start or stop, or enable the optional wrist-flip gesture.\n\nSpeed warnings help you choose a suitable interval for every style in your sequence.\n\nAvailable in English, Simplified and Traditional Chinese, Japanese, French, and Spanish. No account, advertising, analytics, or sound required.",
+    "keywords": "haptic,timer,metronome,watch,bpm,interval,vibration,pulse,rhythm,sequence",
+    "whatsNew": "Compose and loop haptic sequences using real style abbreviations. Play haptics directly on iPhone and sync compositions to Apple Watch. Added Chinese, Japanese, French, and Spanish support, including localized decimal input.",
+    "supportUrl": "https://github.com/iebb/haptick/issues",
+    "marketingUrl": "https://github.com/iebb/haptick"
+  },
+  "zh-Hans": {
+    "subtitle": "iPhone 与 Watch 触感节拍器",
+    "promotionalText": "在 iPhone 上组合循环触感，直接播放或同步到 Apple Watch，享受可独立使用的无声节拍器。",
+    "description": "HapTick 是适用于 iPhone 和 Apple Watch 的触感计时器和无声节拍器（metronome）。\n\n设置间隔或 BPM，选择单一触感样式，或组合最多 64 个步骤。每个步骤以实际触感样式的缩写显示。您可以更改、移动、复制或移除步骤，并循环播放整个组合。\n\n在 iPhone 上打开 HapTick 时可直接播放触感，也可将设置和组合同步到 Apple Watch。手表会保存设置，并可独立使用。转动数码表冠调整间隔或 BPM，轻点圆环开始或停止，或启用可选的翻腕手势。\n\n速度提示可帮助您为组合中的每种触感选择合适的间隔。\n\n支持英语、简体中文、繁体中文、日语、法语和西班牙语。无需账户，无广告，无分析追踪，无需声音。",
+    "keywords": "触感,计时器,节拍器,手表,BPM,间隔,振动,节奏,组合,metronome",
+    "whatsNew": "使用实际样式缩写组合并循环播放触感。支持在 iPhone 上直接播放，并将组合同步到 Apple Watch。新增中文、日语、法语和西班牙语支持，包括本地化小数输入。",
+    "supportUrl": "https://github.com/iebb/haptick/issues",
+    "marketingUrl": "https://github.com/iebb/haptick"
+  },
+  "zh-Hant": {
+    "subtitle": "iPhone 與 Watch 觸感節拍器",
+    "promotionalText": "在 iPhone 上組合循環觸感，直接播放或同步到 Apple Watch，享受可獨立使用的無聲節拍器。",
+    "description": "HapTick 是適用於 iPhone 和 Apple Watch 的觸感計時器和無聲節拍器（metronome）。\n\n設定間隔或 BPM，選擇單一觸感樣式，或組合最多 64 個步驟。每個步驟以實際觸感樣式的縮寫顯示。您可以更改、移動、複製或移除步驟，並循環播放整個組合。\n\n在 iPhone 上開啟 HapTick 時可直接播放觸感，也可將設定和組合同步到 Apple Watch。手錶會儲存設定，並可獨立使用。轉動數位錶冠調整間隔或 BPM，點一下圓環開始或停止，或啟用可選的翻腕手勢。\n\n速度提示可協助您為組合中的每種觸感選擇合適的間隔。\n\n支援英語、簡體中文、繁體中文、日語、法語和西班牙語。無需帳號，無廣告，無分析追蹤，無需聲音。",
+    "keywords": "觸感,計時器,節拍器,手錶,BPM,間隔,震動,節奏,組合,metronome",
+    "whatsNew": "使用實際樣式縮寫組合並循環播放觸感。支援在 iPhone 上直接播放，並將組合同步到 Apple Watch。新增中文、日語、法語和西班牙語支援，包括在地化小數輸入。",
+    "supportUrl": "https://github.com/iebb/haptick/issues",
+    "marketingUrl": "https://github.com/iebb/haptick"
+  },
+  "ja": {
+    "subtitle": "iPhoneとWatchの触覚メトロノーム",
+    "promotionalText": "iPhoneで繰り返す触覚シーケンスを作成。直接再生したり、Apple Watchに同期して単独で使える無音メトロノームに。",
+    "description": "HapTickはiPhoneとApple Watchのための触覚タイマーと無音メトロノーム（metronome）です。\n\n間隔やBPMを設定し、単一の触覚スタイルを選ぶか、最大64ステップのシーケンスを作成できます。各ステップは触覚スタイルの略称で表示されます。変更、移動、複製、削除して、シーケンス全体をループ再生できます。\n\niPhoneでHapTickを開いている間は直接触覚を再生できます。設定とシーケンスをApple Watchに同期することもできます。Watchは設定を保存し、単独でも使用できます。Digital Crownで間隔やBPMを調整し、リングをタップして開始・停止。手首を返すジェスチャも選べます。\n\n速度の警告により、シーケンス内の各スタイルに適した間隔を選べます。\n\n英語、簡体字・繁体字中国語、日本語、フランス語、スペイン語に対応。アカウント、広告、分析、音は不要です。",
+    "keywords": "触覚,タイマー,メトロノーム,Watch,BPM,間隔,振動,リズム,シーケンス",
+    "whatsNew": "触覚スタイルの略称を使ってシーケンスを作成し、ループ再生できます。iPhoneでの触覚再生とApple Watchへのシーケンス同期に対応。中国語、日本語、フランス語、スペイン語と地域に合わせた小数入力を追加しました。",
+    "supportUrl": "https://github.com/iebb/haptick/issues",
+    "marketingUrl": "https://github.com/iebb/haptick"
+  },
+  "fr-FR": {
+    "subtitle": "Rythmes iPhone et Watch",
+    "promotionalText": "Composez une séquence de vibrations sur iPhone, jouez-la directement ou synchronisez-la avec Apple Watch pour un métronome silencieux et autonome.",
+    "description": "HapTick est un minuteur haptique et un métronome silencieux (metronome) pour iPhone et Apple Watch.\n\nRéglez un intervalle ou un BPM, choisissez un style haptique ou composez une séquence de 64 étapes maximum. Chaque étape affiche l’abréviation de son style. Modifiez, déplacez, dupliquez ou supprimez les étapes, puis répétez la séquence entière.\n\nLes vibrations fonctionnent tant que HapTick est ouvert sur iPhone. Vous pouvez aussi synchroniser les réglages et la séquence avec Apple Watch. La Watch conserve les réglages et fonctionne de manière autonome. Tournez la Digital Crown pour ajuster l’intervalle ou le BPM, touchez l’anneau pour démarrer ou arrêter, ou activez le geste de retournement du poignet.\n\nLes avertissements de vitesse vous aident à choisir un intervalle adapté à chaque style.\n\nDisponible en anglais, chinois simplifié et traditionnel, japonais, français et espagnol. Sans compte, publicité, suivi analytique ni son.",
+    "keywords": "haptique,minuteur,métronome,watch,bpm,intervalle,vibration,rythme,séquence",
+    "whatsNew": "Composez des séquences haptiques répétées avec les abréviations des styles. Jouez les vibrations sur iPhone et synchronisez les séquences avec Apple Watch. Ajout du chinois, japonais, français et espagnol et de la saisie décimale locale.",
+    "supportUrl": "https://github.com/iebb/haptick/issues",
+    "marketingUrl": "https://github.com/iebb/haptick"
+  },
+  "es-ES": {
+    "subtitle": "Ritmos hápticos iPhone y Watch",
+    "promotionalText": "Crea una secuencia de pulsos en iPhone, reprodúcela directamente o sincronízala con Apple Watch para usar un metrónomo silencioso e independiente.",
+    "description": "HapTick es un temporizador háptico y un metrónomo silencioso (metronome) para iPhone y Apple Watch.\n\nAjusta un intervalo o BPM, elige un estilo háptico o crea una secuencia de hasta 64 pasos. Cada paso muestra la abreviatura de su estilo. Cambia, mueve, duplica o elimina pasos y repite toda la secuencia.\n\nLos pulsos se reproducen mientras HapTick está abierto en iPhone. También puedes sincronizar los ajustes y la secuencia con Apple Watch. El Watch guarda los ajustes y funciona de forma independiente. Gira la Digital Crown para ajustar el intervalo o BPM, toca el anillo para iniciar o detener, o activa el gesto opcional de giro de muñeca.\n\nLos avisos de velocidad te ayudan a elegir un intervalo adecuado para cada estilo.\n\nDisponible en inglés, chino simplificado y tradicional, japonés, francés y español. Sin cuenta, anuncios, analítica ni sonido.",
+    "keywords": "háptico,temporizador,metrónomo,watch,bpm,intervalo,vibración,ritmo,secuencia",
+    "whatsNew": "Crea y repite secuencias hápticas con las abreviaturas de los estilos. Reproduce pulsos en iPhone y sincroniza secuencias con Apple Watch. Añadidos chino, japonés, francés y español, incluida la entrada decimal local.",
+    "supportUrl": "https://github.com/iebb/haptick/issues",
+    "marketingUrl": "https://github.com/iebb/haptick"
+  },
+  "en-US": {
+    "subtitle": "Haptic loops on iPhone & Watch",
+    "promotionalText": "Compose a repeating haptic sequence on iPhone, play it locally, or sync it to Apple Watch for an independent silent metronome.",
+    "description": "HapTick is a haptic timer and silent metronome for iPhone and Apple Watch.\n\nSet an interval or BPM, choose a single haptic style, or compose a sequence of up to 64 steps. Each step uses its haptic style abbreviation. Change, move, duplicate, or remove steps, then loop the whole sequence.\n\nPlay haptics while HapTick is open on iPhone, or sync your settings and composition to Apple Watch. The Watch saves its settings and works independently. Turn the Digital Crown to adjust the interval or BPM, tap the ring to start or stop, or enable the optional wrist-flip gesture.\n\nSpeed warnings help you choose a suitable interval for every style in your sequence.\n\nAvailable in English, Simplified and Traditional Chinese, Japanese, French, and Spanish. No account, advertising, analytics, or sound required.",
+    "keywords": "haptic,timer,metronome,watch,bpm,interval,vibration,pulse,rhythm,sequence",
+    "whatsNew": "Compose and loop haptic sequences using real style abbreviations. Play haptics directly on iPhone and sync compositions to Apple Watch. Added Chinese, Japanese, French, and Spanish support, including localized decimal input.",
+    "supportUrl": "https://github.com/iebb/haptick/issues",
+    "marketingUrl": "https://github.com/iebb/haptick"
+  }
+}

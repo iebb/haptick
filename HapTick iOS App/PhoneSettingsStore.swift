@@ -4,7 +4,7 @@ import WatchConnectivity
 @MainActor
 final class PhoneSettingsStore: NSObject, ObservableObject, WCSessionDelegate {
     @Published private(set) var settings: HapTickSettings
-    @Published private(set) var syncStatus = "Opening Watch link..."
+    @Published private(set) var syncStatus = L10n.text("Opening Watch link...")
 
     private var session: WCSession?
 
@@ -19,6 +19,7 @@ final class PhoneSettingsStore: NSObject, ObservableObject, WCSessionDelegate {
         var nextSettings = settings
         transform(&nextSettings)
         nextSettings.intervalSeconds = HapTickSettings.normalizedInterval(nextSettings.intervalSeconds)
+        nextSettings.composition = HapTickSettings.normalizedComposition(nextSettings.composition)
         apply(nextSettings, shouldSend: true)
     }
 
@@ -54,7 +55,7 @@ final class PhoneSettingsStore: NSObject, ObservableObject, WCSessionDelegate {
 
     private func activateSession() {
         guard WCSession.isSupported() else {
-            syncStatus = "Watch sync unavailable on this device"
+            syncStatus = L10n.text("Watch sync unavailable on this device")
             return
         }
 
@@ -80,29 +81,29 @@ final class PhoneSettingsStore: NSObject, ObservableObject, WCSessionDelegate {
 
         do {
             try session.updateApplicationContext(settings.dictionary)
-            syncStatus = "Settings queued for Apple Watch"
+            syncStatus = L10n.text("Settings queued for Apple Watch")
         } catch {
-            syncStatus = "Could not queue settings"
+            syncStatus = L10n.text("Could not queue settings")
         }
 
         if session.isReachable {
             session.sendMessage(settings.dictionary, replyHandler: nil) { [weak self] _ in
                 Task { @MainActor in
-                    self?.syncStatus = "Could not reach Apple Watch"
+                    self?.syncStatus = L10n.text("Could not reach Apple Watch")
                 }
             }
-            syncStatus = "Sent to Apple Watch"
+            syncStatus = L10n.text("Sent to Apple Watch")
         }
     }
 
     private func sendPlaybackCommand(_ command: HapTickPlaybackCommand) {
         guard let session else {
-            syncStatus = "Watch sync unavailable on this device"
+            syncStatus = L10n.text("Watch sync unavailable on this device")
             return
         }
 
         guard session.isReachable else {
-            syncStatus = "Open HapTick on Apple Watch to control playback"
+            syncStatus = L10n.text("Open HapTick on Apple Watch to control playback")
             return
         }
 
@@ -111,10 +112,10 @@ final class PhoneSettingsStore: NSObject, ObservableObject, WCSessionDelegate {
 
         session.sendMessage(message, replyHandler: nil) { [weak self] _ in
             Task { @MainActor in
-                self?.syncStatus = "Could not reach Apple Watch"
+                self?.syncStatus = L10n.text("Could not reach Apple Watch")
             }
         }
-        syncStatus = command == .start ? "Start sent to Apple Watch" : "Stop sent to Apple Watch"
+        syncStatus = L10n.text(command == .start ? "Start sent to Apple Watch" : "Stop sent to Apple Watch")
     }
 
     nonisolated func session(
@@ -124,9 +125,9 @@ final class PhoneSettingsStore: NSObject, ObservableObject, WCSessionDelegate {
     ) {
         Task { @MainActor in
             if let error {
-                syncStatus = "Watch sync failed: \(error.localizedDescription)"
+                syncStatus = L10n.format("Watch sync failed: %@", error.localizedDescription)
             } else {
-                syncStatus = activationState == .activated ? "Watch link active" : "Watch link inactive"
+                syncStatus = L10n.text(activationState == .activated ? "Watch link active" : "Watch link inactive")
                 sendCurrentSettings()
             }
         }
@@ -140,7 +141,7 @@ final class PhoneSettingsStore: NSObject, ObservableObject, WCSessionDelegate {
 
     nonisolated func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) {
         Task { @MainActor in
-            apply(HapTickSettings(dictionary: applicationContext), shouldSend: false)
+            apply(HapTickSettings(dictionary: applicationContext, fallback: settings), shouldSend: false)
         }
     }
 
@@ -148,7 +149,7 @@ final class PhoneSettingsStore: NSObject, ObservableObject, WCSessionDelegate {
         guard message[HapTickMessage.playbackCommandKey] == nil else { return }
 
         Task { @MainActor in
-            apply(HapTickSettings(dictionary: message), shouldSend: false)
+            apply(HapTickSettings(dictionary: message, fallback: settings), shouldSend: false)
         }
     }
 }

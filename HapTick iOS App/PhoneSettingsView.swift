@@ -1,7 +1,9 @@
 import SwiftUI
 
 struct PhoneSettingsView: View {
+    @Environment(\.scenePhase) private var scenePhase
     @StateObject private var store = PhoneSettingsStore()
+    @StateObject private var player = PhoneHapticPlayer()
     @State private var intervalText = ""
     @State private var bpmText = ""
     @FocusState private var focusedField: EditedField?
@@ -21,9 +23,11 @@ struct PhoneSettingsView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 18) {
-                    syncPanel
+                    phonePanel
                     valuePanel
+                    compositionPanel
                     stylePanel
+                    syncPanel
                     behaviorPanel
                 }
                 .padding(.horizontal, 18)
@@ -34,8 +38,12 @@ struct PhoneSettingsView: View {
             .background(Color(.systemGroupedBackground).ignoresSafeArea())
             .onAppear(perform: syncInputText)
             .onChange(of: store.settings) { _, _ in
+                player.update(store.settings)
                 guard focusedField == nil else { return }
                 syncInputText()
+            }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .background { player.stop() }
             }
             .onChange(of: focusedField) { oldValue, newValue in
                 if oldValue != nil, newValue == nil {
@@ -75,7 +83,7 @@ struct PhoneSettingsView: View {
             let hasWarning = intervalWarning != nil || bpmWarning != nil || styleWarning != nil
 
             VStack(alignment: .leading, spacing: 6) {
-                Label(isInterval ? "Interval" : "BPM", systemImage: isInterval ? "timer" : "metronome")
+                Label(L10n.text(isInterval ? "Interval" : "BPM"), systemImage: isInterval ? "timer" : "metronome")
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(hasWarning ? Color.red : Color.secondary)
 
@@ -153,6 +161,10 @@ struct PhoneSettingsView: View {
         VStack(alignment: .leading, spacing: 14) {
             panelHeader(title: "Style", systemImage: "waveform.path.ecg")
 
+            Text("Choose a style for a single pulse or the next step you add.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+
             LazyVGrid(columns: styleColumns, spacing: 10) {
                 ForEach(HapticStyle.allCases) { style in
                     styleButton(style)
@@ -213,6 +225,125 @@ struct PhoneSettingsView: View {
         .accessibilityLabel("Flip to start or stop")
     }
 
+    private var phonePanel: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            panelHeader(title: "iPhone", systemImage: "iphone.radiowaves.left.and.right")
+            Button {
+                focusedField = nil
+                player.isRunning ? player.stop() : player.start(store.settings)
+            } label: {
+                Label(L10n.text(player.isRunning ? "Stop" : "Start"), systemImage: player.isRunning ? "stop.fill" : "play.fill")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .disabled(!player.supportsHaptics || (!player.isRunning && displayedSettings.isBelowStyleMinimum))
+            .accessibilityIdentifier("phonePlayback")
+
+            Text(player.status ?? L10n.text(player.supportsHaptics
+                 ? "Haptics play while HapTick is open on iPhone."
+                 : "Haptics are unavailable on this device."))
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+        }
+        .padding(18)
+        .liquidPanel()
+    }
+
+    private var compositionPanel: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Toggle(isOn: Binding(
+                get: { store.settings.compositionEnabled },
+                set: { enabled in store.update { $0.compositionEnabled = enabled } }
+            )) {
+                Label("Loop composition", systemImage: "repeat")
+                    .font(.headline)
+            }
+            .accessibilityIdentifier("compositionEnabled")
+
+            Text(store.settings.compositionLabel + "  ↻")
+                .font(.title2.monospaced().weight(.semibold))
+                .accessibilityLabel(L10n.format("Repeating sequence: %@", store.settings.compositionLabel))
+                .accessibilityIdentifier("compositionSummary")
+                .fixedSize(horizontal: false, vertical: true)
+
+            Text("Each abbreviation is a haptic style. Tap a step to change, move, duplicate, or remove it. The interval applies to every step.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+
+            ScrollView(.horizontal) {
+                HStack(spacing: 8) {
+                    ForEach(store.settings.composition.indices, id: \.self) { index in
+                        compositionStep(index)
+                    }
+                }
+            }
+
+            HStack {
+                Button {
+                    store.update { $0.composition.append($0.hapticStyle) }
+                } label: {
+                    Label("Add step", systemImage: "plus")
+                }
+                .disabled(store.settings.composition.count >= HapTickSettings.maximumCompositionLength)
+                .accessibilityIdentifier("addCompositionStep")
+
+                Spacer()
+
+                Button("Example sequence") {
+                    store.update {
+                        $0.composition = HapTickSettings.exampleComposition
+                        $0.compositionEnabled = true
+                    }
+                }
+                .accessibilityIdentifier("compositionExample")
+            }
+            .buttonStyle(.bordered)
+        }
+        .padding(18)
+        .liquidPanel()
+    }
+
+    private func compositionStep(_ index: Int) -> some View {
+        let style = store.settings.composition[index]
+        return Menu {
+            Picker("Style", selection: Binding(
+                get: { store.settings.composition[index] },
+                set: { style in store.update { $0.composition[index] = style } }
+            )) {
+                ForEach(HapticStyle.allCases) { style in
+                    Label(style.label, systemImage: style.symbolName).tag(style)
+                }
+            }
+            Button("Move left", systemImage: "arrow.left") {
+                store.update { $0.composition.swapAt(index, index - 1) }
+            }
+            .disabled(index == 0)
+            Button("Move right", systemImage: "arrow.right") {
+                store.update { $0.composition.swapAt(index, index + 1) }
+            }
+            .disabled(index == store.settings.composition.count - 1)
+            Button("Duplicate", systemImage: "plus.square.on.square") {
+                store.update { $0.composition.insert(style, at: index + 1) }
+            }
+            .disabled(store.settings.composition.count >= HapTickSettings.maximumCompositionLength)
+            Button("Remove", systemImage: "trash", role: .destructive) {
+                store.update { $0.composition.remove(at: index) }
+            }
+            .disabled(store.settings.composition.count == 1)
+        } label: {
+            VStack(spacing: 6) {
+                Text(style.abbreviation).font(.title3.monospaced().bold())
+                Image(systemName: style.symbolName)
+                Text(style.label).font(.caption2).lineLimit(2)
+            }
+            .frame(width: 86, height: 88)
+            .foregroundStyle(displayedSettings.isStyleUnsupported(style) ? Color.red : Color.primary)
+            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14))
+        }
+        .accessibilityLabel(L10n.format("Step %ld: %@", index + 1, style.label))
+    }
+
     private var syncPanel: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 12) {
@@ -243,6 +374,7 @@ struct PhoneSettingsView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
+                .disabled(displayedSettings.isBelowStyleMinimum)
 
                 Button {
                     focusedField = nil
@@ -271,7 +403,7 @@ struct PhoneSettingsView: View {
                 .symbolRenderingMode(.hierarchical)
                 .frame(width: 24, height: 24)
 
-            Text(title)
+            Text(L10n.text(title))
                 .font(.headline.weight(.semibold))
                 .lineLimit(1)
                 .minimumScaleFactor(0.72)
@@ -309,7 +441,7 @@ struct PhoneSettingsView: View {
         }
 
         let maximumText = HapTickSettings.formattedNumber(HapTickSettings.maximumBPM, maximumFractionDigits: 0)
-        return "The maximum supported is \(maximumText) BPM."
+        return L10n.format("The maximum supported is %@ BPM.", maximumText)
     }
 
     private var intervalLimitWarning: String? {
@@ -322,7 +454,7 @@ struct PhoneSettingsView: View {
         }
 
         let minimumText = HapTickSettings.formattedNumber(HapTickSettings.minimumInterval, maximumFractionDigits: 2)
-        return "The minimum supported interval is \(minimumText)s."
+        return L10n.format("The minimum supported interval is %@s.", minimumText)
     }
 
     private var styleSpeedWarning: String? {
@@ -385,7 +517,7 @@ struct PhoneSettingsView: View {
     }
 
     private func numericValue(from text: String) -> Double? {
-        Double(text.trimmingCharacters(in: .whitespacesAndNewlines))
+        HapTickSettings.numericValue(from: text)
     }
 
 }

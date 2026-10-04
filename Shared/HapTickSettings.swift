@@ -8,8 +8,8 @@ enum DisplayMode: String, CaseIterable, Identifiable, Codable {
 
     var label: String {
         switch self {
-        case .interval: "Interval"
-        case .bpm: "BPM"
+        case .interval: L10n.text("Interval")
+        case .bpm: L10n.text("BPM")
         }
     }
 }
@@ -29,15 +29,15 @@ enum HapticStyle: String, CaseIterable, Identifiable, Codable {
 
     var label: String {
         switch self {
-        case .notification: "Notification"
-        case .directionUp: "Direction Up"
-        case .directionDown: "Direction Down"
-        case .success: "Success"
-        case .failure: "Failure"
-        case .retry: "Retry"
-        case .start: "Start"
-        case .stop: "Stop"
-        case .click: "Click"
+        case .notification: L10n.text("Notification")
+        case .directionUp: L10n.text("Direction Up")
+        case .directionDown: L10n.text("Direction Down")
+        case .success: L10n.text("Success")
+        case .failure: L10n.text("Failure")
+        case .retry: L10n.text("Retry")
+        case .start: L10n.text("Start")
+        case .stop: L10n.text("Stop")
+        case .click: L10n.text("Click")
         }
     }
 
@@ -52,6 +52,20 @@ enum HapticStyle: String, CaseIterable, Identifiable, Codable {
         case .start: "play.fill"
         case .stop: "stop.fill"
         case .click: "smallcircle.filled.circle"
+        }
+    }
+
+    var abbreviation: String {
+        switch self {
+        case .notification: L10n.text("NTF")
+        case .directionUp: L10n.text("UP")
+        case .directionDown: L10n.text("DN")
+        case .success: L10n.text("SUC")
+        case .failure: L10n.text("FAIL")
+        case .retry: L10n.text("RET")
+        case .start: L10n.text("STA")
+        case .stop: L10n.text("STP")
+        case .click: L10n.text("CLK")
         }
     }
 
@@ -85,6 +99,11 @@ struct HapTickSettings: Equatable, Codable {
     var hapticStyle: HapticStyle
     var motionToggleEnabled: Bool
     var displayMode: DisplayMode
+    var compositionEnabled: Bool
+    var composition: [HapticStyle]
+
+    static let maximumCompositionLength = 64
+    static let exampleComposition: [HapticStyle] = [.directionUp, .click, .success, .click]
 
     static let minimumInterval = 0.2
     static let maximumInterval = 999.0
@@ -106,29 +125,37 @@ struct HapTickSettings: Equatable, Codable {
     static let hapticStyleKey = "timer.hapticStyle"
     static let motionToggleKey = "timer.motionToggleEnabled"
     static let displayModeKey = "timer.displayMode"
+    static let compositionEnabledKey = "timer.compositionEnabled"
+    static let compositionKey = "timer.composition"
 
     init(
         intervalSeconds: Double = 1.0,
         hapticStyle: HapticStyle = .notification,
         motionToggleEnabled: Bool = false,
-        displayMode: DisplayMode = .interval
+        displayMode: DisplayMode = .interval,
+        compositionEnabled: Bool = false,
+        composition: [HapticStyle] = Self.exampleComposition
     ) {
         self.intervalSeconds = Self.normalizedInterval(intervalSeconds)
         self.hapticStyle = hapticStyle
         self.motionToggleEnabled = motionToggleEnabled
         self.displayMode = displayMode
+        self.compositionEnabled = compositionEnabled
+        self.composition = Self.normalizedComposition(composition)
     }
 
-    init(dictionary: [String: Any]) {
-        let interval = dictionary[Self.intervalKey] as? Double ?? 1.0
-        let styleRaw = dictionary[Self.hapticStyleKey] as? String ?? HapticStyle.notification.rawValue
-        let modeRaw = dictionary[Self.displayModeKey] as? String ?? DisplayMode.interval.rawValue
+    init(dictionary: [String: Any], fallback: Self = Self()) {
+        let interval = dictionary[Self.intervalKey] as? Double ?? fallback.intervalSeconds
+        let styleRaw = dictionary[Self.hapticStyleKey] as? String ?? fallback.hapticStyle.rawValue
+        let modeRaw = dictionary[Self.displayModeKey] as? String ?? fallback.displayMode.rawValue
 
         self.init(
             intervalSeconds: interval,
             hapticStyle: HapticStyle(rawValue: styleRaw) ?? .notification,
-            motionToggleEnabled: dictionary[Self.motionToggleKey] as? Bool ?? false,
-            displayMode: DisplayMode(rawValue: modeRaw) ?? .interval
+            motionToggleEnabled: dictionary[Self.motionToggleKey] as? Bool ?? fallback.motionToggleEnabled,
+            displayMode: DisplayMode(rawValue: modeRaw) ?? fallback.displayMode,
+            compositionEnabled: dictionary[Self.compositionEnabledKey] as? Bool ?? fallback.compositionEnabled,
+            composition: (dictionary[Self.compositionKey] as? [String])?.compactMap(HapticStyle.init(rawValue:)) ?? fallback.composition
         )
     }
 
@@ -137,7 +164,9 @@ struct HapTickSettings: Equatable, Codable {
             Self.intervalKey: intervalSeconds,
             Self.hapticStyleKey: hapticStyle.rawValue,
             Self.motionToggleKey: motionToggleEnabled,
-            Self.displayModeKey: displayMode.rawValue
+            Self.displayModeKey: displayMode.rawValue,
+            Self.compositionEnabledKey: compositionEnabled,
+            Self.compositionKey: composition.map(\.rawValue)
         ]
     }
 
@@ -170,7 +199,7 @@ struct HapTickSettings: Equatable, Codable {
 
     var unitLabel: String {
         switch displayMode {
-        case .interval: "interval"
+        case .interval: L10n.text("interval")
         case .bpm: "BPM"
         }
     }
@@ -180,7 +209,24 @@ struct HapTickSettings: Equatable, Codable {
     }
 
     var isBelowStyleMinimum: Bool {
-        isStyleUnsupported(hapticStyle)
+        playbackStyles.contains(where: isStyleUnsupported)
+    }
+
+    var playbackStyles: [HapticStyle] {
+        compositionEnabled ? Self.normalizedComposition(composition) : [hapticStyle]
+    }
+
+    func style(atBeat index: Int) -> HapticStyle {
+        let styles = playbackStyles
+        return styles[max(index, 0) % styles.count]
+    }
+
+    var compositionLabel: String {
+        Self.normalizedComposition(composition).map(\.abbreviation).joined(separator: " · ")
+    }
+
+    static func normalizedComposition(_ styles: [HapticStyle]) -> [HapticStyle] {
+        styles.isEmpty ? exampleComposition : Array(styles.prefix(maximumCompositionLength))
     }
 
     func isStyleUnsupported(_ style: HapticStyle) -> Bool {
@@ -214,19 +260,20 @@ struct HapTickSettings: Equatable, Codable {
         if isBelowSupportedMinimum {
             switch displayMode {
             case .interval:
-                return "Slow down to at least \(Self.formattedNumber(Self.minimumInterval, maximumFractionDigits: 2))s."
+                return L10n.format("Slow down to at least %@s.", Self.formattedNumber(Self.minimumInterval, maximumFractionDigits: 2))
             case .bpm:
-                return "Slow down to \(Self.formattedNumber(Self.maximumBPM, maximumFractionDigits: 0)) BPM or lower."
+                return L10n.format("Slow down to %@ BPM or lower.", Self.formattedNumber(Self.maximumBPM, maximumFractionDigits: 0))
             }
         }
 
         guard isBelowStyleMinimum else { return nil }
 
+        let limitingStyle = playbackStyles.max { $0.recommendedMinimumInterval < $1.recommendedMinimumInterval } ?? hapticStyle
         switch displayMode {
         case .interval:
-            return "Slow down to \(styleMinimumIntervalLabel), or choose another supported style."
+            return L10n.format("Slow down to %@, or choose another supported style.", styleMinimumIntervalLabel(for: limitingStyle))
         case .bpm:
-            return "Slow down to \(styleLimitLabel(for: hapticStyle)) or lower, or choose another supported style."
+            return L10n.format("Slow down to %@ or lower, or choose another supported style.", styleLimitLabel(for: limitingStyle))
         }
     }
 
@@ -239,7 +286,9 @@ struct HapTickSettings: Equatable, Codable {
             intervalSeconds: interval,
             hapticStyle: style,
             motionToggleEnabled: defaults.bool(forKey: motionToggleKey),
-            displayMode: mode
+            displayMode: mode,
+            compositionEnabled: defaults.bool(forKey: compositionEnabledKey),
+            composition: defaults.stringArray(forKey: compositionKey)?.compactMap(HapticStyle.init(rawValue:)) ?? exampleComposition
         )
     }
 
@@ -248,6 +297,31 @@ struct HapTickSettings: Equatable, Codable {
         defaults.set(hapticStyle.rawValue, forKey: Self.hapticStyleKey)
         defaults.set(motionToggleEnabled, forKey: Self.motionToggleKey)
         defaults.set(displayMode.rawValue, forKey: Self.displayModeKey)
+        defaults.set(compositionEnabled, forKey: Self.compositionEnabledKey)
+        defaults.set(Self.normalizedComposition(composition).map(\.rawValue), forKey: Self.compositionKey)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case intervalSeconds, hapticStyle, motionToggleEnabled, displayMode, compositionEnabled, composition
+    }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            intervalSeconds: try values.decodeIfPresent(Double.self, forKey: .intervalSeconds) ?? 1,
+            hapticStyle: try values.decodeIfPresent(HapticStyle.self, forKey: .hapticStyle) ?? .notification,
+            motionToggleEnabled: try values.decodeIfPresent(Bool.self, forKey: .motionToggleEnabled) ?? false,
+            displayMode: try values.decodeIfPresent(DisplayMode.self, forKey: .displayMode) ?? .interval,
+            compositionEnabled: try values.decodeIfPresent(Bool.self, forKey: .compositionEnabled) ?? false,
+            composition: try values.decodeIfPresent([HapticStyle].self, forKey: .composition) ?? Self.exampleComposition
+        )
+    }
+
+    static func numericValue(from text: String, locale: Locale = .current) -> Double? {
+        let value = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalized = value.replacingOccurrences(of: locale.decimalSeparator ?? ".", with: ".")
+        guard let number = Double(normalized), number.isFinite else { return nil }
+        return number
     }
 
     static func normalizedInterval(_ value: Double) -> Double {

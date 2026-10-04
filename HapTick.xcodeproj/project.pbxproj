@@ -7,20 +7,28 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		06AF4030022B75C60B3CE074 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = D62A54AE3E0B10C1497BC29F /* Localization.swift */; };
+		130DB93CDF8CA5A8B72FE8D9 /* PhoneHapticPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AEA694D5401FC001726B641 /* PhoneHapticPlayer.swift */; };
 		2A62CDCEF9BFFCB68FB2C1D2 /* HapTickSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4E79BEFAD9EC8417A7BE233 /* HapTickSettings.swift */; };
 		3123A52AE67079C6608DE54B /* HapTick Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 629D7E4E720B055EC0D69F87 /* HapTick Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		31B6EBF6E0DBC4C0AB4FFD94 /* WatchSettingsSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21EF4E8A135B738E00F6C423 /* WatchSettingsSync.swift */; };
 		3CE34319F20BB1069A26E6F7 /* HapTickSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4E79BEFAD9EC8417A7BE233 /* HapTickSettings.swift */; };
 		4E9355BCFB4EFC8A8B2AEA35 /* WatchConnectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 397F370D24A5B14A868234C8 /* WatchConnectivity.framework */; };
+		503D4FA73019CA6AE77845FD /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = D62A54AE3E0B10C1497BC29F /* Localization.swift */; };
 		6CB74D5D437D2C124BDF38E1 /* HapTickPhoneApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 917FD95D4DE083FAED78755C /* HapTickPhoneApp.swift */; };
+		79AF314FAEED6A909BA96EFE /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = CD62217F2EA799AE9E2AADFD /* Localizable.strings */; };
 		7E0B0F0581631B1461D5BA1A /* TimerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6155CFCDC13B78C3C0377DAF /* TimerController.swift */; };
 		82A3B6D01A5759A9ABABA8A6 /* WatchConnectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 397F370D24A5B14A868234C8 /* WatchConnectivity.framework */; };
 		8FAE00189492EDF01C7DDA7F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FD04ED50738AE67F9266224F /* Assets.xcassets */; };
 		92F2A46CE69F76C241FACA4A /* HapticMeasurement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92315102C5CE88C6CCDA7E3A /* HapticMeasurement.swift */; };
 		A2F17CCEA22DE91BF0915A59 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7D696192DD2C2BBDCE9D3220 /* Assets.xcassets */; };
 		AF037CF2068B13639E5685BF /* PhoneSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76849BFB442BF93CBD875260 /* PhoneSettingsView.swift */; };
+		AF67E85F17489379ECDCF2D5 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C7D4B95700688C27921A94E5 /* PrivacyInfo.xcprivacy */; };
+		C3F7B87EDC8483E8BD895347 /* CoreHaptics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DD2937B96C4D996970570BDD /* CoreHaptics.framework */; };
 		D69D85AF72E962BF99C3E41B /* PhoneSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6A6EE0BACEBABCB4FD7B164 /* PhoneSettingsStore.swift */; };
 		D84DADB69EFCA2B72EA192BF /* TimerScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB708039C275921005BCCCB1 /* TimerScreen.swift */; };
+		DE2F4215D63DE7D8A32210C1 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = C7D4B95700688C27921A94E5 /* PrivacyInfo.xcprivacy */; };
+		ECFBDD225CA5CE36B0CF83AE /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = CD62217F2EA799AE9E2AADFD /* Localizable.strings */; };
 		FF22538B621AFD774BF833EB /* HapTickApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AC888E8F91260F647B9FE65 /* HapTickApp.swift */; };
 /* End PBXBuildFile section */
 
@@ -49,22 +57,34 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		18D1E8E515BF929556F4BAAB /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
 		1AC888E8F91260F647B9FE65 /* HapTickApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapTickApp.swift; sourceTree = "<group>"; };
 		21EF4E8A135B738E00F6C423 /* WatchSettingsSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSettingsSync.swift; sourceTree = "<group>"; };
+		2AEA694D5401FC001726B641 /* PhoneHapticPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneHapticPlayer.swift; sourceTree = "<group>"; };
+		325E3D7ABFFF901DF4E62110 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
 		397F370D24A5B14A868234C8 /* WatchConnectivity.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WatchConnectivity.framework; path = System/Library/Frameworks/WatchConnectivity.framework; sourceTree = SDKROOT; };
 		6155CFCDC13B78C3C0377DAF /* TimerController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerController.swift; sourceTree = "<group>"; };
 		624221D3D1959B9CFA0348AA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		629D7E4E720B055EC0D69F87 /* HapTick Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "HapTick Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		742D2DFED1731EBF54273A4D /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		76849BFB442BF93CBD875260 /* PhoneSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneSettingsView.swift; sourceTree = "<group>"; };
 		7D696192DD2C2BBDCE9D3220 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7F78318FAC662E893D43DC1F /* HapTick.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = HapTick.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		801B6614766C1C0F454633DF /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		917FD95D4DE083FAED78755C /* HapTickPhoneApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapTickPhoneApp.swift; sourceTree = "<group>"; };
 		919F97E91FDD34F6167DBFE9 /* AppFlows.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = AppFlows.md; sourceTree = "<group>"; };
 		92315102C5CE88C6CCDA7E3A /* HapticMeasurement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticMeasurement.swift; sourceTree = "<group>"; };
+		B5D18B99CAB59C61CE470F1D /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
 		B6A6EE0BACEBABCB4FD7B164 /* PhoneSettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneSettingsStore.swift; sourceTree = "<group>"; };
+		C6ABFD391548DC0439118AD8 /* Local.xcconfig.example */ = {isa = PBXFileReference; path = Local.xcconfig.example; sourceTree = "<group>"; };
+		C7D4B95700688C27921A94E5 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		D62A54AE3E0B10C1497BC29F /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
+		D8316EED2294DE8E4F25AC71 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		DB708039C275921005BCCCB1 /* TimerScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerScreen.swift; sourceTree = "<group>"; };
+		DD2937B96C4D996970570BDD /* CoreHaptics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreHaptics.framework; path = System/Library/Frameworks/CoreHaptics.framework; sourceTree = SDKROOT; };
 		E371F466FABDF1EF8C034C75 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		E4E79BEFAD9EC8417A7BE233 /* HapTickSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapTickSettings.swift; sourceTree = "<group>"; };
+		F00DACF83BBBE59B65286D09 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Localizable.strings; sourceTree = "<group>"; };
 		FD04ED50738AE67F9266224F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -74,6 +94,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4E9355BCFB4EFC8A8B2AEA35 /* WatchConnectivity.framework in Frameworks */,
+				C3F7B87EDC8483E8BD895347 /* CoreHaptics.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -94,6 +115,7 @@
 				FD04ED50738AE67F9266224F /* Assets.xcassets */,
 				917FD95D4DE083FAED78755C /* HapTickPhoneApp.swift */,
 				624221D3D1959B9CFA0348AA /* Info.plist */,
+				2AEA694D5401FC001726B641 /* PhoneHapticPlayer.swift */,
 				B6A6EE0BACEBABCB4FD7B164 /* PhoneSettingsStore.swift */,
 				76849BFB442BF93CBD875260 /* PhoneSettingsView.swift */,
 			);
@@ -118,6 +140,9 @@
 			isa = PBXGroup;
 			children = (
 				E4E79BEFAD9EC8417A7BE233 /* HapTickSettings.swift */,
+				D62A54AE3E0B10C1497BC29F /* Localization.swift */,
+				C7D4B95700688C27921A94E5 /* PrivacyInfo.xcprivacy */,
+				CD62217F2EA799AE9E2AADFD /* Localizable.strings */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -133,6 +158,7 @@
 		88224CAA1CCCFE29421678A0 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				DD2937B96C4D996970570BDD /* CoreHaptics.framework */,
 				397F370D24A5B14A868234C8 /* WatchConnectivity.framework */,
 			);
 			name = Frameworks;
@@ -147,9 +173,19 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		8EE429EA9076EAFBCB5971DA /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				C6ABFD391548DC0439118AD8 /* Local.xcconfig.example */,
+				B5D18B99CAB59C61CE470F1D /* Signing.xcconfig */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
 		C201834BCEC4CF2EB91C7D91 = {
 			isa = PBXGroup;
 			children = (
+				8EE429EA9076EAFBCB5971DA /* Config */,
 				838E6E0D5A4C6A9542A2F99D /* Docs */,
 				0DD4CBFFB25A61C1C50BE92B /* HapTick iOS App */,
 				157635DFDEBB7441F805B901 /* HapTick Watch App */,
@@ -212,11 +248,9 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					40D13F327FBF047B163663F5 = {
-						DevelopmentTeam = 9733K94JUG;
 						ProvisioningStyle = Automatic;
 					};
 					77B4915A02C9BA6A92F9926E = {
-						DevelopmentTeam = 9733K94JUG;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -227,6 +261,11 @@
 			knownRegions = (
 				Base,
 				en,
+				es,
+				fr,
+				ja,
+				"zh-Hans",
+				"zh-Hant",
 			);
 			mainGroup = C201834BCEC4CF2EB91C7D91;
 			minimizedProjectReferenceProxies = 1;
@@ -247,6 +286,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				8FAE00189492EDF01C7DDA7F /* Assets.xcassets in Resources */,
+				79AF314FAEED6A909BA96EFE /* Localizable.strings in Resources */,
+				AF67E85F17489379ECDCF2D5 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -255,6 +296,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				A2F17CCEA22DE91BF0915A59 /* Assets.xcassets in Resources */,
+				ECFBDD225CA5CE36B0CF83AE /* Localizable.strings in Resources */,
+				DE2F4215D63DE7D8A32210C1 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -268,6 +311,7 @@
 				FF22538B621AFD774BF833EB /* HapTickApp.swift in Sources */,
 				3CE34319F20BB1069A26E6F7 /* HapTickSettings.swift in Sources */,
 				92F2A46CE69F76C241FACA4A /* HapticMeasurement.swift in Sources */,
+				503D4FA73019CA6AE77845FD /* Localization.swift in Sources */,
 				7E0B0F0581631B1461D5BA1A /* TimerController.swift in Sources */,
 				D84DADB69EFCA2B72EA192BF /* TimerScreen.swift in Sources */,
 				31B6EBF6E0DBC4C0AB4FFD94 /* WatchSettingsSync.swift in Sources */,
@@ -280,6 +324,8 @@
 			files = (
 				6CB74D5D437D2C124BDF38E1 /* HapTickPhoneApp.swift in Sources */,
 				2A62CDCEF9BFFCB68FB2C1D2 /* HapTickSettings.swift in Sources */,
+				06AF4030022B75C60B3CE074 /* Localization.swift in Sources */,
+				130DB93CDF8CA5A8B72FE8D9 /* PhoneHapticPlayer.swift in Sources */,
 				D69D85AF72E962BF99C3E41B /* PhoneSettingsStore.swift in Sources */,
 				AF037CF2068B13639E5685BF /* PhoneSettingsView.swift in Sources */,
 			);
@@ -295,9 +341,26 @@
 		};
 /* End PBXTargetDependency section */
 
+/* Begin PBXVariantGroup section */
+		CD62217F2EA799AE9E2AADFD /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				801B6614766C1C0F454633DF /* en */,
+				18D1E8E515BF929556F4BAAB /* es */,
+				F00DACF83BBBE59B65286D09 /* fr */,
+				325E3D7ABFFF901DF4E62110 /* ja */,
+				742D2DFED1731EBF54273A4D /* zh-Hans */,
+				D8316EED2294DE8E4F25AC71 /* zh-Hant */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
 /* Begin XCBuildConfiguration section */
 		5DFA05A9907B7F473E8F2FCF /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = B5D18B99CAB59C61CE470F1D /* Signing.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -330,7 +393,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 28;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -363,6 +426,7 @@
 		};
 		6479BE72A52D1A1FB1B395B2 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = B5D18B99CAB59C61CE470F1D /* Signing.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -395,7 +459,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 28;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -425,7 +489,6 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 9733K94JUG;
 				INFOPLIST_FILE = "HapTick iOS App/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -443,7 +506,6 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 9733K94JUG;
 				INFOPLIST_FILE = "HapTick Watch App/Info.plist";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = ad.neko.haptick;
 				PRODUCT_BUNDLE_IDENTIFIER = ad.neko.haptick.watchapp;
@@ -460,7 +522,6 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 9733K94JUG;
 				INFOPLIST_FILE = "HapTick Watch App/Info.plist";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = ad.neko.haptick;
 				PRODUCT_BUNDLE_IDENTIFIER = ad.neko.haptick.watchapp;
@@ -478,7 +539,6 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 9733K94JUG;
 				INFOPLIST_FILE = "HapTick iOS App/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (

@@ -98,6 +98,9 @@ struct TimerScreen: View {
                             .accessibilityAddTraits(.isButton)
                             .accessibilityLabel(controller.isRunning ? "Stop vibration" : "Start vibration")
 
+                            compositionControl
+                                .padding(.horizontal, contentPadding)
+
                             styleControl
                                 .padding(.horizontal, contentPadding)
                                 .padding(.bottom, 8)
@@ -203,6 +206,25 @@ struct TimerScreen: View {
                     .accessibilityLabel(style.label)
                 }
             }
+        }
+    }
+
+    private var compositionControl: some View {
+        VStack(spacing: 8) {
+            Toggle("Loop composition", isOn: Binding(
+                get: { controller.compositionEnabled },
+                set: { controller.setCompositionEnabled($0) }
+            ))
+            .font(.caption)
+            .tint(.cyan)
+            if controller.compositionEnabled {
+                Text(controller.compositionLabel + "  ↻")
+                    .font(.system(.body, design: .monospaced))
+                    .foregroundStyle(.cyan)
+            }
+            Text("Compose on iPhone, then sync to Watch.")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
         }
     }
 
