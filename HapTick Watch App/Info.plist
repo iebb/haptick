@@ -20,6 +20,8 @@
 	<false/>
 	<key>WKApplication</key>
 	<true/>
+	<key>WKRunsIndependentlyOfCompanionApp</key>
+	<true/>
 	<key>WKBackgroundModes</key>
 	<array>
 		<string>self-care</string>
