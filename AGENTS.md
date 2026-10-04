@@ -11,7 +11,7 @@
 
 HapTick is a native SwiftUI haptic metronome/timer with an iOS companion app and a watchOS app that should remain installable and usable independently on Apple Watch.
 
-- Bundle IDs: `ad.neko.haptick` for iOS, `ad.neko.haptick.watchapp` for watchOS.
+- Published bundle IDs: `ad.neko.haptick` for iOS, `ad.neko.haptick.watchapp` for watchOS. Public checkouts use a team-specific development `HAPTICK_BUNDLE_ID`; Xcode Cloud restores the published ID in ignored release configuration. Both Watch and companion identifiers must derive from this setting.
 - The watch app is the primary experience: tap the ring to start/stop, turn the Digital Crown to adjust the value, swipe left/right to switch Interval/BPM display, and optionally flip the wrist to start/stop.
 - The iOS app edits one mode at a time, either interval or BPM, composes looping sequences with actual haptic style abbreviations, plays haptics locally, sends settings to the watch, and can send start/stop playback commands when the watch is reachable.
 - Both apps localize controls, statuses, warnings, and style abbreviations in English, Chinese (Simplified and Traditional), Japanese, French, and Spanish.

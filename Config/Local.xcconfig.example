@@ -1,2 +1,4 @@
 // Copy to Local.xcconfig at the repository root for signed local builds.
 DEVELOPMENT_TEAM = YOUR_TEAM_ID
+// Optional: override the team-specific development identifier.
+// HAPTICK_BUNDLE_ID = com.yourorganisation.haptick

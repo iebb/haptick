@@ -11,6 +11,6 @@ if [ "${#signing_team}" -ne 10 ]; then
     echo "The signing team must be a 10-character Developer Program team ID" >&2
     exit 1
 fi
-printf 'DEVELOPMENT_TEAM = %s\n' "$signing_team" > "$CI_PRIMARY_REPOSITORY_PATH/Local.xcconfig"
+printf 'DEVELOPMENT_TEAM = %s\nHAPTICK_BUNDLE_ID = ad.neko.haptick\n' "$signing_team" > "$CI_PRIMARY_REPOSITORY_PATH/Local.xcconfig"
 
 "$CI_PRIMARY_REPOSITORY_PATH/Tests/run.sh"

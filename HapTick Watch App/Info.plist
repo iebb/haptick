@@ -25,6 +25,6 @@
 		<string>self-care</string>
 	</array>
 	<key>WKCompanionAppBundleIdentifier</key>
-	<string>ad.neko.haptick</string>
+	<string>$(HAPTICK_BUNDLE_ID)</string>
 </dict>
 </plist>

@@ -1,3 +1,5 @@
 // Developers choose their own signing team in an ignored Local.xcconfig.
 // Xcode Cloud writes this file from HAPTICK_DEVELOPMENT_TEAM.
+// A public checkout uses a team-specific development identifier.
+HAPTICK_BUNDLE_ID = com.example.haptick$(DEVELOPMENT_TEAM)
 #include? "../Local.xcconfig"

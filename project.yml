@@ -32,7 +32,7 @@ targets:
       - sdk: CoreHaptics.framework
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: ad.neko.haptick
+        PRODUCT_BUNDLE_IDENTIFIER: $(HAPTICK_BUNDLE_ID)
         INFOPLIST_FILE: HapTick iOS App/Info.plist
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         CODE_SIGN_STYLE: Automatic
@@ -48,11 +48,11 @@ targets:
       - sdk: WatchConnectivity.framework
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: ad.neko.haptick.watchapp
+        PRODUCT_BUNDLE_IDENTIFIER: $(HAPTICK_BUNDLE_ID).watchapp
         INFOPLIST_FILE: HapTick Watch App/Info.plist
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         CODE_SIGN_STYLE: Automatic
-        INFOPLIST_KEY_WKCompanionAppBundleIdentifier: ad.neko.haptick
+        INFOPLIST_KEY_WKCompanionAppBundleIdentifier: $(HAPTICK_BUNDLE_ID)
         SKIP_INSTALL: YES
         SUPPORTED_PLATFORMS: "watchos watchsimulator"
 schemes:
