@@ -22,7 +22,7 @@ Tests/run.sh
 
 ## Xcode Cloud
 
-Use `https://github.com/iebb/haptick.git`, branch `master`, project `HapTick.xcodeproj`, and scheme `HapTick`. Archive for iOS with App Store distribution. `ci_scripts/ci_post_clone.sh` configures signing using Xcode Cloud's `CI_TEAM_ID`; no signing identity or release credential belongs in the source repository. Xcode Cloud manages build numbers, so keep its next number greater than the most recent App Store Connect build.
+Use `https://github.com/iebb/haptick.git`, branch `master`, project `HapTick.xcodeproj`, and scheme `HapTick`. Archive for iOS with App Store distribution. Set `HAPTICK_DEVELOPMENT_TEAM` to the 10-character Apple Developer Program team ID in Xcode Cloud's environment variables. `ci_scripts/ci_post_clone.sh` uses it to configure signing and runs the shared settings tests. No signing identity or release credential belongs in the source repository. Xcode Cloud manages build numbers, so keep its next number greater than the most recent App Store Connect build.
 
 ## Privacy
 

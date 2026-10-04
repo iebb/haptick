@@ -5,7 +5,7 @@
 - Always use `master` instead of `main` as the branch name.
 - Keep `project.yml` and `HapTick.xcodeproj/project.pbxproj` in sync when changing build settings. `project.yml` is the XcodeGen source of truth, but the checked-in Xcode project is used directly by local/Xcode Cloud workflows.
 - App Store Connect rejects duplicate build numbers. Current app version metadata is `MARKETING_VERSION = 1.1` and `CURRENT_PROJECT_VERSION = 28`. Check App Store Connect before choosing a later number; Xcode Cloud manages the uploaded build number.
-- Signing teams and credentials belong in ignored `Local.xcconfig` or external release configuration. Xcode Cloud obtains its team from `CI_TEAM_ID`.
+- Signing teams and credentials belong in ignored `Local.xcconfig` or external release configuration. Xcode Cloud obtains its signing team from `HAPTICK_DEVELOPMENT_TEAM`; its built-in `CI_TEAM_ID` can be the App Store Connect organisation ID.
 
 ## Product Shape
 
